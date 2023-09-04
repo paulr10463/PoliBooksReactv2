@@ -249,7 +249,6 @@ app.delete('/api/delete/book/:bookId' , isAuthenticated, async (req, res) => {
 
 //Crear un libro
 app.post('/api/create/book', isAuthenticated, async (req, res) => {
-  //console.log("Ingresando peticion")
   try {
     const bookData = req.body
     console.log(bookData)
@@ -280,44 +279,6 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
   } catch (error) {
     console.error('Error al actualizar el libro:', error)
     res.status(500).json({ error: 'Hubo un error al actualizar el libro', errorFire: error })
-  }
-})
-
-/*
-
-    // Redirigir al usuario o enviar una respuesta de éxito
-    const db = firebase.firestore()
-    const userUid = user.uid // El ID único del usuario
-
-    // Crear un documento en Firestore para el usuario
-    db.collection('users').doc(userUid).set({
-      nombres: 'Nombre del usuario',
-      telefono: 'Número de teléfono del usuario',
-    })
-      .then(() => {
-        // Los nombres y el número de teléfono se han guardado exitosamente
-      })
-      .catch((error) => {
-        console.error('Error al guardar en Firestore:', error)
-      })
-*/
-
-
-
-
-
-
-/*USUARIOS*/
-
-// Crear usuario
-app.post('/create_user', async (req, res) => {
-  try {
-    const userData = req.body
-    const newUserRef = await addDoc(collection(db, 'users'), userData)
-    res.status(201).json({ message: 'Usuario creado exitosamente', userId: newUserRef.id })
-  } catch (error) {
-    console.error('Error al crear el usuario:', error)
-    res.status(500).json({ error: 'Hubo un error al crear el usuario', errorFire: error })
   }
 })
 
