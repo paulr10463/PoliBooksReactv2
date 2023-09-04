@@ -1,0 +1,11 @@
+.seller-books-container{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 30px auto;
+    width: 70%;
+}
+
+.seller-books-container .portfolio-item{
+    margin: 20px;
+}

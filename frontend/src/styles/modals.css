@@ -1,0 +1,154 @@
+.inputs-container{
+    display: flex;
+    flex-direction: column;
+    height: 150px;
+    justify-content: space-evenly;
+}
+
+.modal-content .modal-close-icon {
+    display: flex;
+    flex-direction: row-reverse;
+    cursor: pointer;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(90deg, rgba(14, 59, 101, 1) 0%, rgba(23, 97, 167, 1) 100%);
+    width: 450px;
+    height: 550px;
+    border-radius: 5px;
+    color: #fff;
+    padding: 40px;
+    font-family: "Roboto", sans-serif;
+    margin: -20px;
+    z-index: 1000
+}
+
+.modal-content a, p {
+    color: #fff;
+}
+
+.modal-content .modal-text-description , 
+.modal-content .modal-footer-text {
+    font-size: 12px;
+    padding: 5px 0px;
+    color: #fff;
+}
+
+.modal-content .modal-text-list {
+    font-size: 12px;
+    padding: 0px 0px;
+}
+
+.modal-content form {
+    display: flex;
+    flex-direction: column;
+    color: #000000;
+}
+
+.modal-content .modal-user {
+    margin-bottom: 30px;
+    border: none;
+}
+
+.modal-content input {
+    font-size: 12px;
+    background: #D9D9D9;
+    outline: none;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.modal-content .modal-button {
+    background: #FF5C17;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    font-family: "Roboto", sans-serif;
+    transition: 0.3s;
+    font-weight: 200;
+    border: none;
+    height: 45px;
+    align-items: center;
+    margin: 100px 70px 10px 70px;
+}
+
+.modal-content .modal-button:hover {
+    background: #f67b46;
+}
+
+.modal-content .modal-footer-text {
+    font-size: 14px;
+    margin: auto;
+}
+
+.modal-content .login-dialog-text {
+    font-size: 12px;
+    padding: 5px 0px;
+}
+
+.search-input {
+    border-radius: 4px;
+    z-index: 90;
+    width: 100%;
+    padding-left: 35px;
+}
+
+.modal-content .modal-link {
+    font-size: 12px;
+    padding: 5px 0px;
+}
+
+
+.forgot-password{
+    width: 450px;
+    height: 350px;
+}
+
+.modal-content .forgot-password-button {
+    background: #FF5C17;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    font-family: "Roboto", sans-serif;
+    transition: 0.3s;
+    font-weight: 200;
+    border: none;
+    height: 45px;
+    align-items: center;
+    margin: 25px 70px 10px 70px;
+}
+
+.modal-content .forgot-password-button:hover {
+    background: #f67b46;
+}
+
+.modal-content .reset-password-button {
+    background: #FF5C17;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    font-family: "Roboto", sans-serif;
+    transition: 0.3s;
+    font-weight: 200;
+    border: none;
+    height: 45px;
+    align-items: center;
+    margin: 75px 70px 10px 70px;
+}
+
+.modal-content .reset-password-button:hover {
+    background: #f67b46;
+}
+
+.passwords-container{
+    display: flex;
+    flex-direction: column;
+    height: 100px;
+    justify-content: space-between;
+}
+
+.forgot-form{
+    margin-top: 15px;
+}

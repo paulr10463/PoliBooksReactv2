@@ -1,0 +1,12 @@
+.featured-services {
+    padding: 50px 0px;
+    z-index: -1;
+  }
+  
+  .books-container {
+    display: grid;
+    grid-template-columns: 22% 22% 22% 22%;
+    justify-content: space-evenly;
+    z-index: -2;
+  }
+  

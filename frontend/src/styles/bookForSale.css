@@ -1,0 +1,134 @@
+
+ .icon-box{
+    margin: 20px 0px;
+    display: flex;
+    z-index: -100;
+  }
+  
+.icon-box .books-item-image{
+    width: 150px
+  }
+  
+ .books-description {
+    padding: 0px 30px;
+    display: flex;
+    flex-direction: column; 
+    justify-content: space-between; 
+  }
+  
+  .books-container .books-description h3{
+    color: #FF5C17;
+    font-size: 18px;
+  }
+  
+  .books-description .buy-books-button{
+    background: #FF5C17;
+    padding: 6px 20px 8px 20px;
+    border-radius: 4px;
+    color: #fff;
+    transition: none;
+    font-size: 16px;
+    font-family: "Roboto", sans-serif;
+    transition: 0.3s;
+    font-weight: 100;
+    border: none;
+    height: 40px;
+  }
+  
+  .books-description .buy-books-button:hover{
+    background: #fa763d;
+  }
+
+  .books-description .buy-books-button-selected{
+    background: #b0b0b0;
+    padding: 6px 20px 8px 20px;
+    border-radius: 4px;
+    color: #fff;
+    transition: none;
+    font-size: 16px;
+    font-family: "Roboto", sans-serif;
+    transition: 0.3s;
+    font-weight: 100;
+    border: none;
+    height: 40px;
+  }
+  
+  .books-description .buy-books-button-selected:hover{
+    background: #242424;
+  }
+
+
+ .star-container{
+    display: flex;
+    align-items: center;
+  }
+  
+.star-container h4{
+    padding: 10px 8px 0px 10px;
+  }
+  
+.icon-box {
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0 29px 0 rgba(68, 88, 144, 0.12);
+  transition: all 0.3s ease-in-out;
+  border-radius: 8px;
+  z-index: 1;
+}
+
+
+ .icon-box::before {
+  content: "";
+  position: absolute;
+  background: #cbe0fb;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  top: 100%;
+  transition: all 0.3s;
+  z-index: -1;
+}
+
+.icon-box:hover::before {
+  background: #bbb9b9;
+  top: 0;
+  border-radius: 0px;
+}
+
+.icon {
+  margin-bottom: 15px;
+}
+
+.icon i {
+  font-size: 48px;
+  line-height: 1;
+  color: #106eea;
+  transition: all 0.3s ease-in-out;
+}
+
+.title {
+  font-weight: 700;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.title a {
+  color: #111;
+}
+
+.description {
+  font-size: 12px;
+  margin-bottom: 0;
+}
+
+.icon-box:hover .title a,
+.icon-box:hover .description {
+  color: #fff;
+}
+
+ .icon-box:hover .icon i {
+  color: #fff;
+}
+

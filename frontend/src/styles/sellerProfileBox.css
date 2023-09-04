@@ -1,0 +1,47 @@
+  
+  .row{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+  }
+
+  .main-box {
+    display: flex;
+    width: 70%;
+    box-shadow: 5px 5px 12px 0 rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    justify-content: space-evenly;
+  }
+  
+  .inner-box {
+    background-color: white;
+    padding: 20px;
+  }
+  
+  .inner-box h3 {
+    color: rgb(212, 165, 8);
+    font-size: 40px;
+
+  }
+  
+  .inner-box p {
+    color: black;
+  }
+  
+  .main-box .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: rgb(212, 165, 8);
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 40px;
+    margin: 40px 0;
+    border: none
+  }
+
+  .main-box .btn:hover {
+    background-color: rgb(206, 181, 100);
+  }
+  

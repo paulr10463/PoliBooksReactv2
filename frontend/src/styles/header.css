@@ -1,0 +1,63 @@
+#header {
+    background: #fff;
+    transition: all 0.5s;
+    z-index: 997;
+    height: 86px;
+    box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+  }
+  
+  #header.fixed-top {
+    height: 60px;
+  }
+  
+  #header .quote {
+    width: 30%;
+    min-width: 300px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-family: "Roboto", sans-serif;
+  }
+  
+  #header .logo {
+    margin: 0;
+    padding: 10px;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    font-family: "Poppins", sans-serif;
+  }
+  
+  #header .logo img {
+    max-height: 40px;
+  }
+  
+  .btn-buy{
+    background: #FF5C17;
+    padding: 6px 20px 8px 20px;
+    border-radius: 4px;
+    color: #fff;
+    transition: none;
+    font-size: 14px;
+    font-family: "Roboto", sans-serif;
+    transition: 0.3s;
+    font-weight: 200;
+    border: none;
+    height: 35px;
+    margin: 5px 10px
+  }
+  
+  .btn-buy:hover{
+    background: #f67b46;
+  }
+  
+  #header .button-container{
+    display: flex;
+    align-items: center;
+  }
+  
