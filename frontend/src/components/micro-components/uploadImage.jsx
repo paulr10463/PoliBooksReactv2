@@ -31,7 +31,7 @@ function UploadImage({ defaultImages, imagesCallback }) {
   const uploadFile = (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    fetch("http://localhost:3001/upload", {
+    fetch("http://localhost:3000/upload", {
       method: 'POST',
       body: formData,
     })
