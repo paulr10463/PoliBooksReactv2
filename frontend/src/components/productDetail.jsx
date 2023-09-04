@@ -11,6 +11,7 @@ import 'swiper/css/pagination';
 
 
 const ProductDetail = ({book}) => {
+    const urlImage = "https://firebasestorage.googleapis.com/v0/b/polibooksweb.appspot.com/o/polibooks%2FnotAvailableBook.png?alt=media&token=0b68b219-5e8a-4652-92d5-7b1ddcd2d129"
     function handleBuy() {
         window.location.href = `https://wa.me/593${book.contact}?text=Hola, estoy interesado en comprar el libro ${book.title}`;
     }
@@ -26,11 +27,19 @@ const ProductDetail = ({book}) => {
                     navigation
                     pagination={{ clickable: true }}
                 >
-                    {book.image.map((url, index) => (
+                    {
+                    (book.image.length > 0) ?(
+                    book.image.map((url, index) => (
                         <SwiperSlide key={index}>
                             <img src={url} alt="imagen del libro" />
                         </SwiperSlide>
-                    ))}
+                    ))) :
+                    (	
+                        <SwiperSlide>
+                        <img src={urlImage} alt="imagen no disponible" />
+                        </SwiperSlide>
+                    )
+                    }
                 </Swiper>
                 <div className="product-detail-rating"> Estado: <Stars rating={5} /></div>
             </div>

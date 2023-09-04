@@ -7,7 +7,7 @@ import { useAuth } from '../../utils/authContext.jsx';
 
 const SellerBookItem = ({ book }) => {
     const { authData } = useAuth();
-
+    const urlImage = "https://firebasestorage.googleapis.com/v0/b/polibooksweb.appspot.com/o/polibooks%2FnotAvailableBook.png?alt=media&token=0b68b219-5e8a-4652-92d5-7b1ddcd2d129"
     function handleEdit() {
         window.location.href = `/update/${book.id}`;
     }
@@ -48,13 +48,12 @@ const SellerBookItem = ({ book }) => {
 
           });
       }
-
-    return (
+      return (
         <div data-aos="fade-up" id="book_for_sale_{id}" className="portfolio-item">
             <div className="portfolio-wrap">
                 <button className="btn-edit" data-book-id="1" onClick={handleEdit}><FontAwesomeIcon icon={faPenToSquare} /></button>
                 <button className="btn-delete" data-book-id="1" onClick={handleDelete}><FontAwesomeIcon icon={faTrash} /></button>  
-                <img src={book.image} className="img-fluid" alt="Portada del libro"></img>
+                <img src={book.image.length > 0? book.image: urlImage} className="img-fluid" alt="Portada del libro"></img>
                 <div className="portfolio-info">
                     <h4>{book.title}</h4>
                     <p>{book.level}</p>

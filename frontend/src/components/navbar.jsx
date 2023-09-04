@@ -35,15 +35,15 @@ const Navbar = () => {
         <nav id="navbar" >
             <ul>
                 <li><a className="nav-link scrollto" href="/">Inicio</a></li>
-                <li className="dropdown"><a className="nav-link" href="/search"><span>Categorías</span> <FontAwesomeIcon className= "down_chevron" icon={faChevronDown} /> </a>
+                <li className="dropdown"><a className="nav-link" href="/search/books?title="><span>Categorías</span> <FontAwesomeIcon className= "down_chevron" icon={faChevronDown} /> </a>
                     <ul>
-                        <li className="dropdown"><a href="/search"><span>Idiomas</span> <FontAwesomeIcon icon={faChevronRight} /> </a>
+                        <li className="dropdown"><a href="/search/books?title="><span>Idiomas</span> <FontAwesomeIcon icon={faChevronRight} /> </a>
                             <ul>
                                 <li><a href="/search/books?title=Ingles">Inglés</a></li>
                                 <li><a href="/search/books?title=Frances">Francés</a></li>
                             </ul>
                         </li>
-                        <li className="dropdown"><a href="/search"><span>Niveles</span> <FontAwesomeIcon icon={faChevronRight} /> </a>
+                        <li className="dropdown"><a href="/search/books?title="><span>Niveles</span> <FontAwesomeIcon icon={faChevronRight} /> </a>
                             <ul>
                                 <li><a href="/search/books?title=academico">Academico</a></li>
                                 <li><a href="/search/books?title=principiante">Principiante</a></li>
