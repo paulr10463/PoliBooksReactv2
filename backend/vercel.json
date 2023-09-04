@@ -1,7 +1,3 @@
 {
-    "functions": {
-      "api/main": {
-        "handler": "main.js"
-      }
-    }
-  }
+  "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }]
+}

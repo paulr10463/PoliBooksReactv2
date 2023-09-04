@@ -6,9 +6,10 @@ const { getFirestore, updateDoc, collection, query, limit, getDocs, where, getDo
 const { getAuth, sendPasswordResetEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword } = require("firebase/auth")
 const multer = require('multer');
 const { getStorage, ref, uploadBytesResumable, getDownloadURL } = require("firebase/storage");
-const isAuthenticated = require('./firebaseAuthentication')
-const firebaseConfig = require('./firebaseConfig')
+const isAuthenticated = require('../firebaseAuthentication')
+const firebaseConfig = require('../firebaseConfig')
 require('dotenv').config()
+const { v4 } = require('uuid')
 
 const app = express()
 app.use(express.json())
@@ -20,6 +21,18 @@ const db = getFirestore(appFirebase)
 const firebaseStorage = getStorage(appFirebase)
 const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
+
+app.get('/api', (req, res) => {
+  const path = `/api/item/${v4()}`
+  res.setHeader('Content-Type', 'text/html')
+  res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate')
+  res.end(`Hello! Go to item: <a href="${path}">${path}</a>`)
+})
+
+app.get('/api/item/:slug', (req, res) => {
+  const { slug } = req.params
+  res.end(`Item: ${slug}`)
+})
 
 // Ruta para subir un archivo
 app.post('/upload', upload.single('file'), async (req, res) => {
