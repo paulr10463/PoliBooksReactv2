@@ -13,19 +13,17 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-
+    max-height: 600px;
   }
   
   .product-detail .product-detail-swiper{
     width: 100%;
     height: 100%;
     align-items: center;
-    display: flex;
     justify-content: center;
-    display: flex;
+    text-align: center;
   }
   .product-detail .product-detail-swiper img{
-    margin: auto;
     height: 100%; 
   }
 
