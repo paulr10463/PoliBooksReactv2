@@ -13,7 +13,8 @@ import 'swiper/css/pagination';
 const ProductDetail = ({book}) => {
     const urlImage = "https://firebasestorage.googleapis.com/v0/b/polibooksweb.appspot.com/o/polibooks%2FnotAvailableBook.png?alt=media&token=0b68b219-5e8a-4652-92d5-7b1ddcd2d129"
     function handleBuy() {
-        window.location.href = `https://wa.me/593${book.contact}?text=Hola, estoy interesado en comprar el libro ${book.title}`;
+        const url = `https://wa.me/593${book.contact}?text=Hola, estoy interesado en comprar el libro ${book.title}`;
+        window.open(url, '_blank');
     }
 
     return (

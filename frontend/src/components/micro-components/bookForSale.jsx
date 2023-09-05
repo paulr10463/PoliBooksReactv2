@@ -8,18 +8,23 @@ export default function Book ( {book} ) {
   const handleClick = () => {
      window.location.href = "/detail/"+book.id;
     }
-  
-  return (
-    <div className="icon-box" data-aos="fade-up" data-aos-delay="100">
+    
+    const priceFormated = book.price?.toFixed(2);
+    const priceIntegerPart = priceFormated?.split(".")[0];
+    const priceDecimalPart = priceFormated?.split(".")[1];
+    
+
+    return (
+    <div onClick={handleClick} className="icon-box" data-aos="fade-up" data-aos-delay="100">
       <img src= {book.image.length > 0? book.image : urlImage} className="books-item-image" alt=""></img>
       <div className="books-description">
         <h4 className="title">{book.title}</h4>
-        <p> {book.description} </p>
+        <h3><span>US$</span> {priceIntegerPart} <span> {priceDecimalPart} </span></h3>
+        <p> {book.description.length>50?book.description.substring(0,50)+"...":book.description} </p>
         <div className="star-container">
           <Stars rating={3}/>
         </div>
-        <h3>$ {book.price}</h3>
-        <input className="buy-books-button" onClick={handleClick} type="button" value="Ver más"></input>
+        
       </div>
     </div>
   );

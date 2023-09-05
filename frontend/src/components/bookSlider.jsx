@@ -17,9 +17,6 @@ const BookSlider = ({book}) => {
                     <h4>Estado:</h4>
                     <Stars rating={5} />
                 </div>
-                
-            </div>
-            <div className="testimonial-text-description">
                 <input onClick={handleClick} type="button" value="Ver más"></input>
             </div>
         </div>

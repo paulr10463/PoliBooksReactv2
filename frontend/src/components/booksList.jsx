@@ -25,10 +25,5 @@ export default function Books() {
         </section>
     );
 };
-/*
-                {books &&books.map((book, index) => (
-                    <Book key={index} title={book.title} imageURL={book.image} price={book.price} rating={4} description={book.description} />
-                ))
-                }
-*/
+
 

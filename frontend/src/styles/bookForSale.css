@@ -3,8 +3,16 @@
     margin: 20px 0px;
     display: flex;
     z-index: -100;
+    max-height: 275px;
+    padding: 30px;
+    background: #fff;
+    box-shadow: 0 0 29px 0 rgba(68, 88, 144, 0.12);
+    transition: all 0.3s ease-in-out;
+    border-radius: 20px;
+    z-index: 1;
+    cursor: pointer;
   }
-  
+
 .icon-box .books-item-image{
     width: 150px
   }
@@ -13,20 +21,13 @@
     padding: 0px 30px;
     display: flex;
     flex-direction: column; 
-    justify-content: space-between; 
-  }
-  
-  .books-container .books-description h3{
-    color: #FF5C17;
-    font-size: 18px;
   }
   
   .books-description .buy-books-button{
     background: #FF5C17;
-    padding: 6px 20px 8px 20px;
+    width: 100%;
     border-radius: 4px;
     color: #fff;
-    transition: none;
     font-size: 16px;
     font-family: "Roboto", sans-serif;
     transition: 0.3s;
@@ -67,16 +68,7 @@
     padding: 10px 8px 0px 10px;
   }
   
-.icon-box {
-  padding: 30px;
-  position: relative;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 0 29px 0 rgba(68, 88, 144, 0.12);
-  transition: all 0.3s ease-in-out;
-  border-radius: 8px;
-  z-index: 1;
-}
+
 
 
  .icon-box::before {
@@ -89,12 +81,12 @@
   top: 100%;
   transition: all 0.3s;
   z-index: -1;
+  border-radius: 20px;
 }
 
 .icon-box:hover::before {
-  background: #bbb9b9;
+  background: #dedbdb;
   top: 0;
-  border-radius: 0px;
 }
 
 .icon {
@@ -108,14 +100,23 @@
   transition: all 0.3s ease-in-out;
 }
 
-.title {
+.books-description .title {
   font-weight: 700;
-  margin-bottom: 15px;
   font-size: 16px;
 }
 
-.title a {
+.books-description .title a {
   color: #111;
+}
+
+.books-description h3 {
+  font-weight: 700;
+  font-size: 24px;
+}
+.books-description h3 span{
+  font-weight: 100;
+  font-size: 14px;
+  
 }
 
 .description {
