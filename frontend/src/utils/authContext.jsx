@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
   }, [authData]);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/isAuth',
+    fetch('https://polibooksapi.azurewebsites.net/api/isAuth',
       {
         method: 'GET',
         headers: {

@@ -13,7 +13,7 @@ export default function SellerProfilePage() {
     const [books, setBooks] = useState([]); // [books, setBooks
 
     useEffect(() => {
-        fetch(`http://localhost:3000/api/read/book/auth/${authData.userID}`, {
+        fetch(`https://polibooksapi.azurewebsites.net/read/book/auth/${authData.userID}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

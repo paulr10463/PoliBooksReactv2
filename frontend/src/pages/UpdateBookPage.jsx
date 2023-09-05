@@ -15,7 +15,7 @@ export default function UpdateBookPage() {
     const { authData } = useAuth();
 
     useEffect(() => {
-        fetch(`http://localhost:3000/api/read/book/${bookID}`)
+        fetch(`https://polibooksapi.azurewebsites.net/api/read/book/${bookID}`)
             .then(response => response.json())
             .then(data => setBook(data))
     }, []);

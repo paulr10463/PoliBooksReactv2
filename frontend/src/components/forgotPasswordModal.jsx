@@ -10,7 +10,7 @@ function ForgotPasswordModal ({isOpen, onRequestClose}){
 
   const handleForgotPassword = () => {
     const email = document.getElementById('forgot-password-email').value;
-    fetch('http://localhost:3000/api/user/reset-password', {
+    fetch('https://polibooksapi.azurewebsites.net/api/user/reset-password', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

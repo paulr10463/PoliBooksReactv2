@@ -13,7 +13,7 @@ async function saveBook(userID, tokenId, title, description, brand, level, avail
       userID: userID,
     };
 
-    fetch('http://localhost:3000/api/create/book', {
+    fetch('https://polibooksapi.azurewebsites.net/api/create/book', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ async function saveBook(userID, tokenId, title, description, brand, level, avail
       userID: userID,
     };
 
-    fetch(`http://localhost:3000/api/update/book/${bookID}`, {
+    fetch(`https://polibooksapi.azurewebsites.net/api/update/book/${bookID}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

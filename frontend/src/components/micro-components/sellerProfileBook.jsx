@@ -26,7 +26,7 @@ const SellerBookItem = ({ book }) => {
           if (result.isConfirmed) {
             // Aquí puedes realizar la acción deseada cuando el usuario confirme
             
-            fetch(`http://localhost:3000/api/delete/book/${book.id}`, {
+            fetch(`https://polibooksapi.azurewebsites.net/api/delete/book/${book.id}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

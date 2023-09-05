@@ -45,12 +45,6 @@
             },
         ]);
         
-        const [ user, setUser] = useState(null);
-        
-        // Función para cambiar el mensaje en función del parámetro
-        const changeUser = (newUser) => {
-            setUser(newUser);
-        };
         
         return (
             <AuthProvider>

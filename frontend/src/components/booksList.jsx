@@ -7,7 +7,7 @@ export default function Books() {
     const [books, setBooks] = useState([]);
     
     useEffect(() => {
-        fetch('http://localhost:3000/api/read/books/12')
+        fetch('https://polibooksapi.azurewebsites.net/api/read/books/12')
         .then(response => response.json())
         .then(data => setBooks(data))
     }, [])

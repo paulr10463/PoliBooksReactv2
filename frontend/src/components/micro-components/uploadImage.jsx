@@ -31,7 +31,7 @@ function UploadImage({ defaultImages, imagesCallback }) {
   const uploadFile = (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    fetch("http://localhost:3000/upload", {
+    fetch("https://polibooksapi.azurewebsites.net/upload", {
       method: 'POST',
       body: formData,
     })

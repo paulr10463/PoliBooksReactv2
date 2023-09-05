@@ -18,7 +18,7 @@ export default function SearchBookPage() {
     const [ books, setBooks] = useState([]);
 
     useEffect(() => {
-        fetch(`http://localhost:3000/api/search/books?title=${queryParams.get('title')}`)
+        fetch(`https://polibooksapi.azurewebsites.net/api/search/books?title=${queryParams.get('title')}`)
             .then(response => response.json())
             .then(data => setBooks(data))
             .catch(error => console.log(error));

@@ -11,7 +11,7 @@ const Slider = () => {
     const [books, setBooks] = useState([]);
 
     useEffect(() => {
-        fetch('http://localhost:3000/api/read/books/3')
+        fetch('https://polibooksapi.azurewebsites.net/api/read/books/3')
             .then(response => response.json())
             .then(data => setBooks(data))
         console.log(books)
