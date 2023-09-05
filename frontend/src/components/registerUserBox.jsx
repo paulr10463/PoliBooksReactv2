@@ -23,6 +23,32 @@ const RegisterUserBox = () => {
       }, [inputValidities]);
 
 
+    useEffect(() => {
+        const passwordInput = document.getElementById('user-form-password');
+        passwordInput.addEventListener('focus', function () {
+            const passwordDetails = document.querySelector('.password-details');
+            passwordDetails.style.display = 'block';
+        });
+        passwordInput.addEventListener('blur', function () {
+            const passwordDetails = document.querySelector('.password-details');
+            passwordDetails.style.display = 'none';
+        });
+        return () => {
+            passwordInput.removeEventListener('focus', function () {
+                const passwordDetails = document.querySelector('.password-details');
+                passwordDetails.style.display = 'block';
+            });
+            passwordInput.removeEventListener('blur', function () {
+                const passwordDetails = document.querySelector('.password-details');
+                passwordDetails.style.display = 'none';
+            });
+        }
+    }, []);
+
+
+
+
+
     function handleRegister() {
         if (!isFormValid) {
             errorToast('El formulario no es válido.')
@@ -74,13 +100,20 @@ const RegisterUserBox = () => {
                             index={1}
                         />
                     </div>
-                    <div className="mb-3">
+                    <div className="mb-3 password-section">
+                    <div className="password-details" >
+                            La contraseña debe contar con:
+                            <ul>
+                                <li>Letras mayúsculas y minúsculas</li>
+                                <li>Al menos un número</li>
+                                <li>Mínimo 8 caracteres</li>
+                            </ul></div>
                         <PasswordField 
                             placeholder="Contraseña"
                             id="user-form-password" 
                             isValidCallback={updateInputValidity}
                             index={2}
-                        />   
+                        />
                     </div>
                     <div className="mb-3">
                         <TextInput 

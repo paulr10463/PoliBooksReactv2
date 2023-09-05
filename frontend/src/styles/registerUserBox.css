@@ -56,9 +56,23 @@
   
   .UserForm{
     position: relative;
-    justify-content: space-between;
     align-items: center;
-    height: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .UserForm .password-section .password-details{
+    margin-top: 10px;
+    display: none; 
+    position: absolute;
+    left: 102%;
+    top: 90px;
+    background-color: #FF5C17;
+    padding: 10px;
+    width: 300px;
+    border-radius:10px ;
+    opacity: 0.85;
   }
   
   .r-border a{
