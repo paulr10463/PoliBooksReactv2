@@ -61,6 +61,8 @@ app.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 // Obtener todos los libros
+
+//Aquí generamos solicitudes con la API
 app.get('/api/read/books', async (req, res) => {
   try {
     const booksCol = collection(db, 'books')
