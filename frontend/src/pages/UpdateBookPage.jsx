@@ -11,9 +11,9 @@ import '../styles/index.css'
 
 
 export default function UpdateBookPage() {
-    const { bookID } = useParams();
-    const [book, setBook] = useState({});
-    const { authData } = useAuth();
+    const { bookID } = useParams(); // Se obtiene el ID del libro desde los parámetros de la URL.
+    const [book, setBook] = useState({}); // Estado para almacenar la información del libro a actualizar.
+    const { authData } = useAuth(); // Se obtiene la información de autenticación del usuario.
 
     useEffect(() => {
         fetch(`https://polibooksapi.azurewebsites.net/api/read/book/${bookID}`)
