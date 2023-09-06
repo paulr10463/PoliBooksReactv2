@@ -30,6 +30,37 @@ El proyecto de aplicaciones web se desarrollará utilizando las siguientes tecno
 - API de pagos como Stripe o PayPal para procesar los pagos de los usuarios de manera segura --Pendiente.
 - Hospedaje en un servidor web confiable como AWS o Heroku --Pendiente.
 
+## Instalación y configuración
+1. Clona este repositorio en tu máquina local utilizando el siguiente comando:
+   ```
+   git clone https://github.com/paulr10463/PoliBooks.git
+   ```
+
+
+
+
+## Contribución
+Si deseas contribuir a este proyecto, sigue
+
+los siguientes pasos:
+
+1. Realiza un fork de este repositorio y clónalo en tu máquina local.
+2. Crea una rama nueva para trabajar en tu funcionalidad:
+   ```
+   git checkout -b nombre-rama
+   ```
+3. Realiza los cambios y mejoras necesarios en el código.
+4. Asegúrate de que el código sigue las mejores prácticas y está bien documentado.
+5. Realiza commit de tus cambios:
+   ```
+   git commit -m "Descripción de los cambios"
+   ```
+6. Envía tus cambios al repositorio remoto:
+   ```
+   git push origin nombre-rama
+   ```
+7. Crea una pull request en este repositorio para que revisemos tus cambios.
+8. Estaremos encantados de revisar tu contribución y fusionarla en el proyecto principal si cumple con los requisitos.
 
 ## Licencia
 Este proyecto se encuentra bajo la Licencia GNU GENERAL PUBLIC LICENSE. Puedes consultar el archivo [LICENSE](./LICENSE) para más detalles.
