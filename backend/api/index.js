@@ -89,7 +89,7 @@ app.get('/api/read/book/:bookId', async (req, res) => {
   try {
     const bookId = req.params.bookId
 
-    // Obtener el libro por su ID
+    // Capturamos cada libro por la ida
     const bookRef = doc(db, 'books', bookId)
     const bookDoc = await getDoc(bookRef)
 
