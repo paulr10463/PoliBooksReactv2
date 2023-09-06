@@ -1,9 +1,11 @@
 import "bootstrap/dist/css/bootstrap.min.css";
+// Se importan los componentes y estilos 
 import Book from "./micro-components/bookForSale.jsx";
 import "../styles/booksList.css";
 import { useState, useEffect } from "react";
 
 export default function Books() {
+    // Declaración de estado para almacenar la lista de libros.
     const [books, setBooks] = useState([]);
     
     useEffect(() => {
