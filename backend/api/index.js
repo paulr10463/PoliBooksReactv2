@@ -249,6 +249,7 @@ app.delete('/api/delete/book/:bookId' , isAuthenticated, async (req, res) => {
     await deleteDoc(bookRef)
     res.status(200).json({ message: 'Libro eliminado exitosamente' })
   } catch (error) {
+    // No se pudo eliminar el libro
     console.error('Error al eliminar el libro:', error)
     res.status(500).json({ error: 'Hubo un error al eliminar el libro', errorFire: error })
   }
