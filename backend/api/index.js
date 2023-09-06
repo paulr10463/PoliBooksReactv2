@@ -263,6 +263,7 @@ app.post('/api/create/book', isAuthenticated, async (req, res) => {
     const newBookRef = await addDoc(collection(db,'books'), bookData)
     res.status(201).json({ message: 'Libro creado exitosamente', bookId: newBookRef.id })
   } catch (error) {
+    // No se pudo crear el libro
     console.error('Error al crear el libro:', error)
     res.status(500).json({ error: 'Hubo un error al crear el libro',errorFire:error })
   }
