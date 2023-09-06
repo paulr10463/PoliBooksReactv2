@@ -132,6 +132,59 @@ app.get('/api/read/books/:limit', async (req, res) => {
   }
 })
 
+// Ruta para buscar libros por título o parte del título
+app.get('/api/search/books', async (req, res) => {
+  try {
+    const searchText = req.query.title.toLowerCase() // Convertir la consulta a minúsculas
+
+    // Realizar la búsqueda en la base de datos de Firebase
+    const booksRef = collection(db, 'books')
+    const querySnapshot = await getDocs(booksRef)
+
+    const matchingBooks = []
+    querySnapshot.forEach((doc) => {
+      const title = doc.data().title.toLowerCase() // Convertir el título de la base de datos a minúsculas
+      if (title.includes(searchText)) {
+        // Agregar los libros coincidentes a la lista
+        matchingBooks.push({ id: doc.id, ...doc.data() })
+      }
+    })
+
+    res.status(200).json(matchingBooks)
+  } catch (error) {
+    // No se pudo buscar libros
+    console.error('Error al buscar libros:', error)
+    res.status(500).json({ error: 'Hubo un error al buscar libros', errorFire: error })
+  }
+})
+
+// Ruta protegida que requiere autenticación
+app.get('/api/isAuth', isAuthenticated, (req, res) => {
+  const userId = req.user.uid
+  res.json({ message: `Usuario autenticado con ID: ${userId}` })
+})
+
+app.get('/api/read/book/auth/:userID', isAuthenticated, async (req, res) => {
+  try {
+    const userID = req.params.userID
+    console.log(userID)
+    const booksCol = collection(db, 'books')
+    const querySnapshot = await getDocs(query(booksCol, where('userID', '==', userID)))
+    const booksList = []
+    querySnapshot.forEach((doc) => {
+      booksList.push({
+        id: doc.id,
+        ...doc.data()
+      })
+    })
+    
+    res.status(200).json(booksList)
+  } catch (error) {
+    // No se pudo obtener la lista de libros para el usuario
+    console.error('Error getting the books list for user', error)
+    res.status(500).json({ error: 'Error getting the books list for user' })
+  }
+})
 
 // Ruta para el endpoint de registro de usuario
 app.post('/api/register', async (req, res) => {
