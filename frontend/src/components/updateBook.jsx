@@ -10,6 +10,7 @@ import { useAuth } from '../utils/authContext.jsx';
 
 export default function UpdateBook({book}) {
   const { authData } = useAuth();
+  // Declaración de estados y variables
   const [isSaved, setIsSaved] = useState(false);
   const [checkboxChecked, setCheckbox] = useState(false);
   const [isFormValid, setIsFormValid] = useState(true);
@@ -21,7 +22,9 @@ export default function UpdateBook({book}) {
   function handleCheckboxChange() {
     setCheckbox(!checkboxChecked);
   }
-  
+/* Se recopilan los datos del formulario y se llama a la función updateBookinDB 
+para actualizar el libro en la base de datos.
+El resultado se almacena en el estado isSaved */
 function onPublishButtonClick() {
       const userID = authData.userID;
       const tokenID = authData.idToken;
@@ -71,6 +74,7 @@ function onPublishButtonClick() {
   };
 
   return (
+    // Renderización del componente
     <div className="create-book">
       <ToastContainer />
       <h1>Editar un libro</h1>
