@@ -62,8 +62,3 @@ los siguientes pasos:
 7. Crea una pull request en este repositorio para que revisemos tus cambios.
 8. Estaremos encantados de revisar tu contribución y fusionarla en el proyecto principal si cumple con los requisitos.
 
-## Licencia
-Este proyecto se encuentra bajo la Licencia GNU GENERAL PUBLIC LICENSE. Puedes consultar el archivo [LICENSE](./LICENSE) para más detalles.
-
-## Contacto
-Si tienes alguna pregunta o sugerencia sobre este proyecto, no dudes en ponerte en contacto con nosotros enviando un correo electrónico a [paul.roman@epn.edu.ec](mailto:paul.roman@epn.edu.ec).
