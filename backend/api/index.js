@@ -69,6 +69,7 @@ app.get('/api/read/books', async (req, res) => {
 
     res.status(200).json(booksList)
   } catch (error) {
+    // No se pudo obtener la lista de libros
     console.error('Error getting the books list', error)
     res.status(500).json({ error: 'Error getting the books list' })
   }
