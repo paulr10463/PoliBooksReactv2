@@ -142,6 +142,7 @@ app.get('/api/search/books', async (req, res) => {
 
     res.status(200).json(matchingBooks)
   } catch (error) {
+    // No se pudo buscar libros
     console.error('Error al buscar libros:', error)
     res.status(500).json({ error: 'Hubo un error al buscar libros', errorFire: error })
   }
