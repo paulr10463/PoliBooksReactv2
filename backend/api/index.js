@@ -192,6 +192,7 @@ app.post('/api/register', async (req, res) => {
 
     res.status(200).json({ message: 'Registro exitoso' })
   } catch (error) {
+    // No se pudo registrar el usuario
     console.error('Error al registrarse:', error.message)
     // Manejar errores y enviar una respuesta de error
     res.status(500).json({ error: error.message })
