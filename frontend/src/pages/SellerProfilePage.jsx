@@ -25,7 +25,7 @@ export default function SellerProfilePage() {
     }, []);
 
     return (
-        authData.isAuthorized ? (
+        authData.isAuthorized ? ( // Verifica si el usuario está autorizado
             <>
                 <Header />
                 <Navbar />
