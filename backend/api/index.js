@@ -226,6 +226,7 @@ app.post('/api/user/reset-password', async (req, res) => {
     console.log(resetPassword)
     res.status(200).json({message: "Correo enviado exitosamete"})
   } catch (error) {
+    // No se pudo enviar el correo de restablecimiento de contraseña
     console.error('Error al enviar el correo de restablecimiento de contraseña:', error)
     // Manejar errores y enviar una respuesta de error
     res.status(500).json({ error: error.message })
