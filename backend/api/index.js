@@ -18,6 +18,7 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
+// aquí iniciamos la conexión con firebase
 const appFirebase = initializeApp(firebaseConfig)
 const auth = getAuth(appFirebase)
 const db = getFirestore(appFirebase)
