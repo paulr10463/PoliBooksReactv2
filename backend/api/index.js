@@ -286,6 +286,7 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
     await updateDoc(bookRef, updatedData) 
     res.status(200).json({ message: 'Libro actualizado exitosamente' })
   } catch (error) {
+    // No se pudo actualizar el libro
     console.error('Error al actualizar el libro:', error)
     res.status(500).json({ error: 'Hubo un error al actualizar el libro', errorFire: error })
   }
