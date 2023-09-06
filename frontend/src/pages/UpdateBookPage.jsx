@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+// Se importan componentes y utilidades necesarios.
 import Header from '../components/header.jsx'
 import Navbar from '../components/navbar.jsx'
 import Footer from '../components/footer.jsx'
