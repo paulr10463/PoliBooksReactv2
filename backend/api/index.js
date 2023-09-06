@@ -47,6 +47,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     console.log("downloadURL:", downloadURL);
     return res.status(200).send({url: downloadURL});
   } catch (error) {
+    // No se pudo subir el archivo
     console.error(error);
     res.status(500).send('Error al subir el archivo.');
   }
