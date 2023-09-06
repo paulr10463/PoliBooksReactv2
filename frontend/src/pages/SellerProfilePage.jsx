@@ -11,7 +11,7 @@ import { useAuth } from '../utils/authContext.jsx'
 
 export default function SellerProfilePage() {
     const { authData } = useAuth();
-    const [books, setBooks] = useState([]); // [books, setBooks
+    const [books, setBooks] = useState([]); // [books, setBooks // Estado para almacenar la lista de libros del vendedor
 
     useEffect(() => {
         fetch(`https://polibooksapi.azurewebsites.net/api/read/book/auth/${authData.userID}`, {
