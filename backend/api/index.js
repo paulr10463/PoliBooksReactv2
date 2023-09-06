@@ -119,7 +119,6 @@ app.get('/api/read/books/:limit', async (req, res) => {
 })
 
 // Ruta para buscar libros por título o parte del título
-// Ruta para buscar libros por título o parte del título
 app.get('/api/search/books', async (req, res) => {
   try {
     const searchText = req.query.title.toLowerCase() // Convertir la consulta a minúsculas
