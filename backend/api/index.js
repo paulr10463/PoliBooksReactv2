@@ -1,4 +1,5 @@
 // Cambiar de esto
+// Importación de módulos
 const express = require('express')
 const cors = require('cors')
 const { initializeApp } = require('firebase/app')
@@ -11,6 +12,7 @@ const firebaseConfig = require('../firebaseConfig')
 require('dotenv').config()
 const { v4 } = require('uuid')
 
+// Creación de una instancia en Express
 const app = express()
 app.use(express.json())
 app.use(cors())
@@ -21,6 +23,7 @@ const db = getFirestore(appFirebase)
 const firebaseStorage = getStorage(appFirebase)
 const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
+
 
 app.get('/api', (req, res) => {
   const path = `/api/item/${v4()}`
@@ -34,8 +37,10 @@ app.get('/api/item/:slug', (req, res) => {
   res.end(`Item: ${slug}`)
 })
 
+/* Rutas de la API */
 // Ruta para subir un archivo
 app.post('/upload', upload.single('file'), async (req, res) => {
+  // Ruta para cargar archivos en Firebase Storage
   try {
     const file = req.file
     if (!file) {
@@ -292,6 +297,7 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
   }
 })
 
+// Inicio del servidor
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`Servidor iniciado en el puerto ${PORT}`)
