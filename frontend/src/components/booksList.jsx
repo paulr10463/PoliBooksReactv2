@@ -9,12 +9,14 @@ export default function Books() {
     const [books, setBooks] = useState([]);
     
     useEffect(() => {
+        // Se realiza una solicitud a la API para obtener la lista de libros.
         fetch('https://polibooksapi.azurewebsites.net/api/read/books/12')
         .then(response => response.json())
         .then(data => setBooks(data))
     }, [])
 
     return (
+        // Renderización del componente
         <section id="featured-services" className="featured-services">
             <div className="books-container">
             {books && books.length > 0 ? (
