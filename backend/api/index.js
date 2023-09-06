@@ -170,6 +170,7 @@ app.get('/api/read/book/auth/:userID', isAuthenticated, async (req, res) => {
     
     res.status(200).json(booksList)
   } catch (error) {
+    // No se pudo obtener la lista de libros para el usuario
     console.error('Error getting the books list for user', error)
     res.status(500).json({ error: 'Error getting the books list for user' })
   }
