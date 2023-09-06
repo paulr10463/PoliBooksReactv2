@@ -6,6 +6,7 @@
 - Santiago Miguel Salazar
 - David Yánez
 
+
 ## Descripción
 Este proyecto de aplicaciones web consiste en el desarrollo de un sitio web para la publicación y compra de libros en línea, específicamente dirigido a la comunidad de la Escuela Politécnica Nacional. El objetivo principal es proporcionar una plataforma donde los estudiantes y profesores puedan publicar, buscar y adquirir libros relacionados con sus áreas de estudio.
 
