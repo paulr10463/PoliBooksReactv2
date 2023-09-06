@@ -96,6 +96,7 @@ app.get('/api/read/book/:bookId', async (req, res) => {
       res.status(404).json({ error: 'El libro no existe' })
     }
   } catch (error) {
+    // No se pudo obtener el libro por su ID
     console.error('Error getting the book by ID', error)
     res.status(500).json({ error: 'Error getting the book by ID' })
   }
