@@ -46,7 +46,7 @@ los siguientes pasos:
 1. Realiza un fork de este repositorio y clónalo en tu máquina local.
 2. Crea una rama nueva para trabajar en tu funcionalidad:
    ```
-   git checkout -b nombre-rama
+   git checkout -b nombre-rama 
    ```
 3. Realiza los cambios y mejoras necesarios en el código.
 4. Asegúrate de que el código sigue las mejores prácticas y está bien documentado.
