@@ -8,9 +8,9 @@
 
 
 ## Descripción
-Este proyecto de aplicaciones web consiste en el desarrollo de un sitio web para la publicación y compra de libros en línea, específicamente dirigido a la comunidad de la Escuela Politécnica Nacional. El objetivo principal es proporcionar una plataforma donde los estudiantes y profesores puedan publicar, buscar y adquirir libros relacionados con sus áreas de estudio.
+Este proyecto de aplicaciones web consiste en el desarrollo de un sitio web para la publicación y compra de libros en línea, específicamente dirigido a la comunidad de la Escuela Politécnica Nacional. El objetivo principal es proporcionar una plataforma donde los estudiantes y profesores puedan publicar, buscar y contactarse entre sí para adquirir libros relacionados con sus áreas de estudio.
 
-El sitio web permitirá a los usuarios crear cuentas, agregar libros a su perfil, realizar búsquedas avanzadas, comprar libros disponibles y gestionar sus pedidos. Además, se implementará un sistema de valoraciones para que los usuarios puedan compartir sus opiniones sobre los libros.
+El sitio web permitirá a los usuarios crear cuentas, agregar libros a su perfil, realizar búsquedas y conseguir el número de contacto del vendedor. Además, se implementará un sistema de valoraciones para que los usuarios puedan compartir sus opiniones sobre los libros.
 
 ## Características
 El proyecto de aplicaciones web contará con las siguientes características principales:

@@ -10,42 +10,17 @@ La comunidad politécnica requiere una plataforma en línea para comprar y vende
 
 ## Requerimientos funcionales
 
-La plataforma debe permitir que los usuarios se registren con credenciales válidas.
+- La plataforma debe permitir que los usuarios se registren con nombres y apellidos, correo electrónico, contraseña y número de teléfono.
+- Un usuario registrado debe ser capaz de publicar nuevos libros y editar o eliminar los que tenga publicados.
+- Una publicación de venta de un libro debe contener título, descripción, nivel, marca, institución, costo, contacto, disponibilidad, costo y de 1-5 imagenes del libro. 
+- Todas las características de la publicación de un libro deben poder ser editadas. 
+- Se debe poder buscar una publicación del libro buscando el título de la publicación o una subcadena de esta. 
+- Un usuario invitado debe ser capaz de poder ver el detalle de cualquier publicación de un libro que elija.
+- Se debe permitir el filtrado los libros disponibles a partir del nivel de este. 
+- A partir del detalle de un libro se debe poder redirijir a whatsapp para enviar un mensaje al vendedor. 
+- La plataforma debe mantener un catálogo organizado de todas las publicaciones disponibles.
 
-Creación de Publicaciones:
+## Requerimientos no funcionales 
+### Seguridad
+- Al momento de que un vendedor inicia sesión se le debe asignar un token, el cual se verificará en cada acción de escritura, edición o eliminación de una de sus publicaciones. 
 
-Los usuarios registrados deben poder crear nuevas publicaciones de libros, proporcionando información como título, descripción, marca, nivel, Insitución, contacto, disponibilidad, costo, imagen. 
-Se debe permitir la carga de archivos digitales del libro en formatos estándar (PDF, EPUB, etc.).
-Edición Colaborativa:
-
-Posibilidad de permitir la edición colaborativa de libros, facilitando la participación de varios autores o colaboradores en un proyecto.
-Revisión y Aprobación:
-
-Se debe implementar un sistema de revisión y aprobación para garantizar la calidad académica de las publicaciones.
-Los administradores o revisores designados deben poder aprobar o rechazar una publicación.
-Catálogo de Publicaciones:
-
-La plataforma debe mantener un catálogo organizado de todas las publicaciones disponibles.
-Los usuarios deben poder buscar y filtrar publicaciones según diferentes criterios como categoría, autor o título.
-Proceso de Compra:
-
-Los usuarios registrados deben tener la capacidad de comprar libros directamente desde la plataforma.
-Se debe implementar un sistema de carrito de compras y procesamiento de pagos seguro.
-Histórico de Compras:
-
-Los usuarios deben tener acceso a un historial de sus compras anteriores, con detalles como fecha, título del libro y precio.
-Comunicación Interna:
-
-Se debe proporcionar un sistema de mensajería interna para facilitar la comunicación entre autores, revisores y administradores.
-Gestión de Derechos de Autor:
-
-La plataforma debe incluir un mecanismo para gestionar y respetar los derechos de autor de las obras publicadas.
-Seguridad:
-
-Implementar medidas de seguridad robustas para proteger la información del usuario, datos de pago y contenido del libro.
-Soporte y FAQs:
-
-Proporcionar secciones de preguntas frecuentes (FAQs) y soporte técnico para ayudar a los usuarios con problemas comunes.
-Integración con Bibliotecas Universitarias:
-
-Explorar la posibilidad de integrar la plataforma con las bibliotecas universitarias para facilitar la búsqueda y acceso a recursos académicos.
