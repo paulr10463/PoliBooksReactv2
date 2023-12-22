@@ -32,7 +32,7 @@ El proyecto de aplicaciones web se desarrollará utilizando las siguientes tecno
 ## Instalación y configuración
 1. Clona este repositorio en tu máquina local utilizando el siguiente comando:
    ``` 
-   git clone https://github.com/paulr10463/PoliBooks.git
+   git clone https://github.com/paulr10463/PoliBooks.git 
    ```
 
 
