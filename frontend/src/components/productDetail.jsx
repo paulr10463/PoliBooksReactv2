@@ -26,7 +26,7 @@ const ProductDetail = ({book}) => {
                     spaceBetween={0}
                     slidesPerView={1}
                     navigation
-                    pagination={{ clickable: true }}
+                    pagination={{ clickable: true }}   
                 >
                     {
                     (book.image.length > 0) ?(
@@ -73,7 +73,7 @@ const ProductDetail = ({book}) => {
                         <td>{book.contact}</td>
                     </tr>
                 </table>
-                <button class="buy-button" onClick={handleBuy}>Comprar</button>
+                <button className="buy-button" onClick={handleBuy}>Comprar</button>
             </div>
 
         </section>

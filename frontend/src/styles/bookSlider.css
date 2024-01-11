@@ -1,13 +1,13 @@
 .testimonial-item {
     display: flex;
+    flex-wrap: wrap;
     color: #fff;
-    padding: 20px 200px;
-    margin: 0px 300px;
-    align-items: center;
+    border: 3px solid red;
+    justify-content: center;
   }
 
 .testimonial-item  input:hover{
-    background: #f8763f;
+    background: #f8763f
   }
 
  .testimonial-item p{
@@ -25,13 +25,17 @@
   }
 
   .testimonial-item .testimonial-text {
-    max-width: 700px
+    max-width: 700px;
+    border: 3px solid red;
   }
 
 .testimonial-item .testimonial-img {
     min-width: 250px;
-    height:auto;
-    margin: auto;
+    height:100%;
+    max-height: 400px;
+    width: auto;
+    max-width: 300px;
+    background: #fff;
   }
   
 .testimonial-item h1 {
@@ -54,4 +58,14 @@
     height: 50px;
     width: 150px;
     margin-top: 30px;
+    align-self: center;
+  }
+
+  @media screen and (max-width: 768px) {
+    .testimonial-item .testimonial-text {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
   }
