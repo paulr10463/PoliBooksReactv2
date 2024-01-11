@@ -1,5 +1,6 @@
 
  .icon-box{
+    flex: 0 0 23%;
     margin: 20px 0px;
     display: flex;
     z-index: -100;
@@ -11,6 +12,7 @@
     border-radius: 20px;
     z-index: 1;
     cursor: pointer;
+    min-width: 400px;
   }
 
 .icon-box .books-item-image{
