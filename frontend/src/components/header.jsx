@@ -40,7 +40,7 @@ const Header = () => {
           “La lectura de un buen libro es un diálogo incesante, en que el libro habla, y el alma contesta” (André Maurois).
         </div>
         <div className="button-container">
-          <input onClick={openModal} className="btn-buy w-[300px] bg-green-100" type="button" value={buttonValue}></input>
+          <input onClick={openModal} className="btn-buy bg-red-500" type="button" value={buttonValue}></input>
           {
             authData && authData.isAuthorized && <input onClick={handleMyBooks} className="btn-buy" type="button" value="Mis libros"></input>
           }
