@@ -5,7 +5,6 @@ import Navbar from '../components/navbar.jsx'
 import Footer from '../components/footer.jsx'
 import SellerProfileBox from '../components/sellerProfileBox.jsx'
 import SellerProfileBook from '../components/micro-components/sellerProfileBook.jsx'
-import '../styles/index.css'
 import '../styles/sellerProfilePage.css'
 import { useAuth } from '../utils/authContext.jsx'
 

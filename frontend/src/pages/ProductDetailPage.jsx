@@ -5,7 +5,6 @@ import Footer from '../components/footer.jsx'
 import Books from '../components/booksList.jsx'
 import ProductDetail from '../components/productDetail.jsx'
 import { useParams } from 'react-router-dom'
-import '../styles/index.css'
 import { useEffect, useState } from 'react'
 
 export default function ProductDetailPage() {

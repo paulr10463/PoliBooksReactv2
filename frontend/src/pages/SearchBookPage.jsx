@@ -8,7 +8,6 @@ import { faX } from '@fortawesome/free-solid-svg-icons'
 
 import { useNavigate, useLocation } from 'react-router-dom';
 
-import '../styles/index.css'
 import '../styles/searchBookPage.css'
 
 export default function SearchBookPage() {

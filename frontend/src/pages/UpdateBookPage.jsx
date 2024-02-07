@@ -7,8 +7,6 @@ import UpdateBook from '../components/updateBook.jsx'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../utils/authContext.jsx'
 
-import '../styles/index.css'
-
 
 export default function UpdateBookPage() {
     const { bookID } = useParams(); // Se obtiene el ID del libro desde los parámetros de la URL.

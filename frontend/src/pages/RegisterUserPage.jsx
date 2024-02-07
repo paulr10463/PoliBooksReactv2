@@ -6,7 +6,6 @@ import Books from '../components/booksList.jsx'
 import RegisterUserBox from '../components/registerUserBox.jsx'
 import PasswordField from '../components/micro-components/passwordField.jsx'
 
-import '../styles/index.css'
 
 export default function RegisterUserPage() {
     return (

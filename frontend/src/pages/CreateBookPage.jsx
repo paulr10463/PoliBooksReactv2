@@ -3,7 +3,6 @@ import Header from '../components/header.jsx'
 import Navbar from '../components/navbar.jsx'
 import Footer from '../components/footer.jsx'
 import CreateBook from '../components/createBook.jsx'
-import '../styles/index.css'
 import { useAuth } from '../utils/authContext.jsx'
 
 export default function CreateBookPage() {
