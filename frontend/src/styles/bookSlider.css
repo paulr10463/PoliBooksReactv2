@@ -2,7 +2,6 @@
     display: flex;
     flex-wrap: wrap;
     color: #fff;
-    border: 3px solid red;
     justify-content: center;
   }
 
@@ -26,7 +25,6 @@
 
   .testimonial-item .testimonial-text {
     max-width: 700px;
-    border: 3px solid red;
   }
 
 .testimonial-item .testimonial-img {
