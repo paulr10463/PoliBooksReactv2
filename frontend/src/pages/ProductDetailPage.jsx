@@ -7,30 +7,28 @@ import ProductDetail from '../components/productDetail.jsx'
 import { useParams } from 'react-router-dom'
 import '../styles/index.css'
 import { useEffect, useState } from 'react'
+import { useBookById } from '../hooks/useBooks.jsx'
+import LoadSpinner from '../components/shared/loadSpinnerComponent/loadSpinnerComponent.jsx'
 
 export default function ProductDetailPage() {
     const { bookID } = useParams();
-    const [ book, setBook] = useState({});
-    
-    useEffect(() => {
-        fetch(`https://polibooksapi.azurewebsites.net/api/read/book/${bookID}`)
-            .then(response => response.json())
-            .then(data => setBook(data))
-    }, []);
+    const { books, isLoading, error } = useBookById(bookID);
 
     return (
         <>
-        <Header />
-        <Navbar />
-        {
-            book.id ? (
-                <ProductDetail book={book}/>
-            ) : (
-                <p>Cargando...</p>
-            )
-        }
-        <Books />
-        <Footer />
+            <Header />
+            <Navbar />
+            {error}
+            {isLoading && <div style={{ textAlign: "center" }}><LoadSpinner /></div>}
+            {
+                books.id ? (
+                    <ProductDetail book={books} />
+                ) : (
+                    !isLoading && <p>No se encontró el libro</p>
+                )
+            }
+            <Books />
+            <Footer />
         </>
     );
 }
