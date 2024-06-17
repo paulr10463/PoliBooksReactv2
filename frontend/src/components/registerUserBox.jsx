@@ -57,7 +57,7 @@ const RegisterUserBox = () => {
             const email = document.getElementById('user-form-email').value;
             const password = document.getElementById('user-form-password').value;
             const phone = document.getElementById('user-form-phone').value;
-            fetch('https://polibooksapi.azurewebsites.net/api/register', {
+            fetch('http://localhost:3000/api/register/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

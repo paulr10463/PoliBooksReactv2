@@ -12,11 +12,25 @@ const isAuthenticated = require('../firebaseAuthentication')
 const firebaseConfig = require('../firebaseConfig')
 require('dotenv').config()
 const { v4 } = require('uuid')
+const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const https = require('https');
+const WebSocket = require('ws');
+const url = require('url');
+const bcrypt = require('bcrypt');
 
 // Creación de una instancia en Express
 const app = express()
 app.use(express.json())
 app.use(cors())
+
+// SSL credentials
+const server = https.createServer({
+  cert: fs.readFileSync('cert.pem'),
+  key: fs.readFileSync('key.pem')
+}, app);
+
+const wss = new WebSocket.Server({ server: server, path: '/ws' });
 
 // aquí iniciamos la conexión con firebase
 const appFirebase = initializeApp(firebaseConfig)
@@ -194,11 +208,15 @@ app.post('/api/register', async (req, res) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
     const uid = userCredential.user.uid
     // Guardar información adicional en Firestore
-    await addDoc(collection(db, 'users'), {
-        uid: uid,
-        phone: phone,
-        name: name
-      })
+    const hashedPass = await bcrypt.hashSync(password, 10)
+    
+    await addDoc(collection(db, 'usersjwt'), {
+      uid: uid,
+      phone: phone,
+      name: name,
+      email: email,
+      password: hashedPass
+    })
 
     res.status(200).json({ message: 'Registro exitoso' })
   } catch (error) {
@@ -302,8 +320,110 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
   }
 })
 
+//####################################################################
+//####################################################################
+
+// Obtener todos los usuarios
+app.get('/api/read/users', async (req, res) => {
+  try {
+    // Referencia a la colección 'users'
+    const usersCol = collection(db, 'usersjwt');
+    // Obtener todos los documentos de la colección 'users'
+    const usersSnapshot = await getDocs(usersCol);
+    // Lista para almacenar los usuarios
+    const usersList = [];
+
+    // Iterar sobre cada documento en la colección
+    usersSnapshot.forEach((doc) => {
+      // Agregar cada usuario a la lista
+      usersList.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    // Devolver la lista de usuarios en la respuesta
+    res.status(200).json(usersList);
+  } catch (error) {
+    // Manejo de errores
+    console.error('Error getting the users list', error);
+    res.status(500).json({ error: 'Error getting the users list' });
+  }
+});
+
+
+const jwtSecret = 'a-nice-and-secure-jwt-secret-key';
+
+
+app.post('/api/loginjwt', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Realiza una solicitud a /api/read/users para obtener la lista de usuarios
+    const response = await fetch(`http://localhost:${PORT}/api/read/users`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al obtener la lista de usuarios');
+    }
+
+    const usersList = await response.json();
+
+    // Buscar el usuario en la lista de usuarios
+    const user = usersList.find(user => user.email === email);
+
+    if (!user) {
+      return res.status(401).json({ error: 'Email inválidas' });
+    }
+
+    // Comparar la contraseña usando bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+
+    // Generar JWT
+    const token = jwt.sign(
+      {
+        uid: user.id,
+        email: user.email
+      },
+      jwtSecret,
+      { expiresIn: '1h' } // Token expira en 1 hora
+    );
+
+    // Devolver el token y la información del usuario
+    res.status(200).json({
+      message: 'Autenticación exitosa',
+      token,
+      user: {
+        uid: user.id,
+        email: user.email
+      }
+    });
+
+    /*res.cookie('access_token', token, {
+      httpOnly: true, // la cookie solo se puede acceder en el servidor
+      secure: process.env.NODE_ENV === 'production', // la cookie solo se puede acceder a través de HTTPS en producción
+      sameSite: 'strict', // la cookie solo se puede acceder en el mismo dominio
+      maxAge: 1000 * 60 * 60 // la cookie tiene un tiempo de validez de 1 hora
+    })
+    .send({ user, token });*/
+
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+
 // Inicio del servidor
 const PORT = process.env.PORT || 3000
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Servidor iniciado en el puerto ${PORT}`)
 })
