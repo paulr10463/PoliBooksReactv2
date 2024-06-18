@@ -347,7 +347,7 @@ app.get('/api/read/users', async (req, res) => {
 });
 
 
-const jwtSecret = 'a-nice-and-secure-jwt-secret-key';
+const jwtSecret = process.env.JWT_SECRET
 
 // Ruta para login con JWT
 app.post('/api/loginjwt', async (req, res) => {
