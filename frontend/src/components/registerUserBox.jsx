@@ -53,6 +53,7 @@ const RegisterUserBox = () => {
             const email = document.getElementById('user-form-email').value;
             const password = document.getElementById('user-form-password').value;
             const phone = document.getElementById('user-form-phone').value;
+            
             fetchRegisterUser(name, email, password, phone)
             .then((response) => {
                 if (response.status === 200) {
