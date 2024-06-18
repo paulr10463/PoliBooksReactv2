@@ -25,12 +25,21 @@ export const fetchBooksByTitle = async (title) => {
     return response.json();
 };
 
-export const fetchBooksAuthByUser = async (title) => {
-    const response = await fetch(`${environment.HOST}/search/books?title=${title}`);
+export const fetchBooksAuthByUser = async (userID, idToken) => {
+    const response = await fetch(`${environment.HOST}/read/book/auth/${userID}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `${idToken}`
+        },
+    })
     if (!response.ok) {
         throw new Error('Failed to fetch books');
     }
-    return response.json();
+    const data = response.json()
+    console.log("RESULTADOOOOOOOOO")
+    console.log(data)
+    return data
 };
 
 export const deleteBooks = async (bookId, idToken) => {
@@ -43,7 +52,6 @@ export const deleteBooks = async (bookId, idToken) => {
             },
         });
 
-        console.log(response);
         if (response.ok) {  // If status is 200-299
             return await response.json();  // assuming the server sends a JSON response
         } else {

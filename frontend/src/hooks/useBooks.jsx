@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchBookById, fetchBooks, fetchBooksByTitle } from "../services/book.service";
+import { fetchBookById, fetchBooks, fetchBooksAuthByUser, fetchBooksByTitle } from "../services/book.service";
 
 export const useBooks = (numItems) => {
     const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +17,7 @@ export const useBooks = (numItems) => {
                 setError(error);
                 setIsLoading(false);
             })
-    },[]);
+    },[numItems]);
 
     return { books, isLoading, error}
 };
@@ -38,7 +38,7 @@ export const useBooksByTitle = (title) => {
                 setError(error);
                 setIsLoading(false);
             })
-    },[]);
+    },[title]);
 
     return { books, isLoading, error}
 };
@@ -59,7 +59,29 @@ export const useBookById = (id) => {
                 setError(error);
                 setIsLoading(false);
             })
-    },[]);
+    },[id]);
 
     return { books, isLoading, error}
 };
+
+export const useBooksByUserId = (userID, tokenID) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [books, setBooks] = useState([]);
+    const [error, setError] = useState(null);
+
+    useEffect(()=>{
+        setIsLoading(true);
+        fetchBooksAuthByUser(userID, tokenID)
+            .then(data => {
+                console.log(data)
+                setBooks(data);
+                setIsLoading(false);
+            })
+            .catch(error => {
+                setError(error);
+                setIsLoading(false);
+            })
+    },[userID,tokenID]);
+
+    return {books, isLoading, error};
+}
