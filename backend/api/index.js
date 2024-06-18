@@ -12,20 +12,11 @@ const isAuthenticated = require('../firebaseAuthentication')
 const firebaseConfig = require('../firebaseConfig')
 require('dotenv').config()
 const { v4 } = require('uuid')
-const jwt = require('jsonwebtoken');
-const fs = require('fs');
-const https = require('https');
-const WebSocket = require('ws');
-const url = require('url');
-const bcrypt = require('bcrypt');
 
 // Creación de una instancia en Express
 const app = express()
 app.use(express.json())
 app.use(cors())
-
-// Inicio del servidor
-const PORT = process.env.PORT || 3000
 
 // aquí iniciamos la conexión con firebase
 const appFirebase = initializeApp(firebaseConfig)
@@ -203,15 +194,11 @@ app.post('/api/register', async (req, res) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
     const uid = userCredential.user.uid
     // Guardar información adicional en Firestore
-    const hashedPass = await bcrypt.hashSync(password, 10)
-    
-    await addDoc(collection(db, 'usersjwt'), {
-      uid: uid,
-      phone: phone,
-      name: name,
-      email: email,
-      password: hashedPass
-    })
+    await addDoc(collection(db, 'users'), {
+        uid: uid,
+        phone: phone,
+        name: name
+      })
 
     res.status(200).json({ message: 'Registro exitoso' })
   } catch (error) {
@@ -315,95 +302,8 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
   }
 })
 
-//####################################################################
-//####################################################################
-
-// Obtener todos los usuarios
-app.get('/api/read/users', async (req, res) => {
-  try {
-    // Referencia a la colección 'users'
-    const usersCol = collection(db, 'usersjwt');
-    // Obtener todos los documentos de la colección 'users'
-    const usersSnapshot = await getDocs(usersCol);
-    // Lista para almacenar los usuarios
-    const usersList = [];
-
-    // Iterar sobre cada documento en la colección
-    usersSnapshot.forEach((doc) => {
-      // Agregar cada usuario a la lista
-      usersList.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
-
-    // Devolver la lista de usuarios en la respuesta
-    res.status(200).json(usersList);
-  } catch (error) {
-    // Manejo de errores
-    console.error('Error getting the users list', error);
-    res.status(500).json({ error: 'Error getting the users list' });
-  }
-});
-
-
-const jwtSecret = 'a-nice-and-secure-jwt-secret-key';
-
-// Ruta para login con JWT
-app.post('/api/loginjwt', async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const usersCol = collection(db, 'usersjwt');
-    const q = query(usersCol, where('email', '==', email));
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
-      return res.status(500).json({ error: 'Credenciales inválidas' , token: null});
-    }
-
-    const userDoc = querySnapshot.docs[0];
-    const user = { id: userDoc.id, ...userDoc.data() };
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(500).json({ error: 'Credenciales inválidas' , token: null});
-    }
-
-    const token = jwt.sign(
-      {
-        uid: user.id,
-        email: user.email
-      },
-      jwtSecret,
-      { expiresIn: '1h' }
-    );
-
-    res.status(200).json({
-      message: 'Autenticación exitosa',
-      isAuthorized: true,
-      token,
-      user: {
-        uid: user.id,
-        email: user.email
-      }
-    });
-
-  } catch (error) {
-    console.error('Error al iniciar sesión:', error.message);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-
-// SSL credentials
-const server = https.createServer({
-  key: fs.readFileSync('polibooks_key.pem'),
-  cert: fs.readFileSync('polibooks_cert.pem')
-}, app);
-
-const wss = new WebSocket.Server({ server: server, path: '/ws' });
-
-server.listen(PORT, () => {
+// Inicio del servidor
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => {
   console.log(`Servidor iniciado en el puerto ${PORT}`)
 })
