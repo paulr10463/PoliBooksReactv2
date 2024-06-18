@@ -1,28 +1,23 @@
-import {useState} from 'react'
-import './chatInput.css'
-export default function ChatInput({ onSendMessage }) {
-    const [message, setMessage] = useState('');
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (message.trim()) {
-            onSendMessage(message);
-            setMessage('');
+import React from 'react';
+import './chatInput.css';
+export default function ChatInput({ onSendMessage, value, onChange }) {
+    const handleKeyPress = (event) => {
+        if (event.key === 'Enter') {
+            onSendMessage();
         }
     };
 
     return (
-        <form className="sendMessageForm" onSubmit={handleSubmit}>
+        <div className="sendMessageForm">
             <input
                 type="text"
-                className="sendMessageInput"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Ingresa tu mensaje..."
+                value={value}
+                onChange={onChange}
+                onKeyPress={handleKeyPress}
+                placeholder="Escribe un mensaje..."
+                className='sendMessageInput'
             />
-            <button type="submit" className="sendMessageButton">
-                Enviar
-            </button>
-        </form>
+            <button className="sendMessageButton" onClick={onSendMessage}>Enviar</button>
+        </div>
     );
 }

@@ -1,9 +1,22 @@
-.chatGroup{
-    width: 100%;
-    max-width: 1200px;
+.chatGroup {
+    width: 90%;
+    max-width: 1000px;
+    height: 70vh;
     margin: 2rem auto;
     padding: 2rem;
     border-radius: 2rem;
-    border: solid 0.05rem #bbbbbb;
-
+    border: solid 1px #bbbbbb;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow-y: auto; /* Allow scrolling if content exceeds height */
+    background-color: #ffffff; /* Optional: Set background color */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Optional: Add shadow for depth */
+    scroll-behavior: smooth;
+    overflow-y: auto;    
 }
+
+.chatGroup__mesages{
+    overflow-y: auto;  
+}
+

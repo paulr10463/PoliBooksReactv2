@@ -55,7 +55,7 @@ const Navbar = () => {
                     </ul>
                 </li>
                 {authData.isAuthorized && <li><a className="nav-link scrollto" href="/seller">Vender</a></li>}
-                {authData.isAuthorized && <li><a className="nav-link scrollto" href="/seller">Chat</a></li>}
+                {authData.isAuthorized && <li><a className="nav-link scrollto" href="/chat">Chat</a></li>}
                 
                 <li><a className="nav-link" href="#services"nav-link scrollto>Quienes Somos</a></li>
             </ul>
