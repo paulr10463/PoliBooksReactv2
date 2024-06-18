@@ -37,8 +37,8 @@ const userCredentials = [
 
 // SSL credentials
 const server = https.createServer({
-  cert: fs.readFileSync('cert.pem'),
-  key: fs.readFileSync('key.pem')
+  cert: fs.readFileSync('polibooks_cert.pem'),
+  key: fs.readFileSync('polibooks_key.pem')
 }, app);
 
 // Define the WebSocket server. Here, the server mounts to the `/ws`
