@@ -38,7 +38,7 @@
   }
   
   .btn-buy{
-    background: #FF5C17;
+    background: var(--primary-color);
     padding: 6px 20px 8px 20px;
     border-radius: 4px;
     color: #fff;

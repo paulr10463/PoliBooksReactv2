@@ -28,7 +28,7 @@ const LoginModal =  ({isOpen, onRequestClose }) => {
     const password = document.getElementById('modal-password-login').value;
     console.log(email, password);
     signIn({email, password}).then((data) => {
-      console.log("data: " + data);
+      console.log(data);
       if(data.isAuthorized){
         successToast("Inicio de sesión exitoso");
         setAuthorization(data);
@@ -37,7 +37,6 @@ const LoginModal =  ({isOpen, onRequestClose }) => {
         errorToast('Correo o contraseña incorrectos');
       }  
     }).catch((error) => {
-      console.log(error); //----------
       errorToast('Error al iniciar sesión');
     });
   };
@@ -82,7 +81,6 @@ const LoginModal =  ({isOpen, onRequestClose }) => {
         </section>
       </Modal>
       <Forgot isOpen={isFPModalOpen} onRequestClose={() => setIsFPModalOpen(false)} />
-      <ToastContainer />
     </div>
   );
 }
