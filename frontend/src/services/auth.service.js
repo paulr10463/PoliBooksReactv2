@@ -14,7 +14,7 @@ export function isAuth(idToken) {
 export function loginJWT(userData) {
     return fetch(`${environment.HOST}/loginjwt/`,
         {
-            method: 'GET',
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },

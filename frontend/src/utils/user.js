@@ -1,4 +1,3 @@
-let ws;
 
 import { loginJWT } from "../services/auth.service";
 
