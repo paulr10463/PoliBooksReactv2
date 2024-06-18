@@ -12,13 +12,13 @@ export const fetchResetPassword = async (email) => {
     });
 }
 
-export const registerUser = async(name,email,password,phone) => {
-    return fetch('https://polibooksapi.azurewebsites.net/api/register', {
+export const fetchRegisterUser = async (name, email, password, phone) => {
+    return fetch(`${environment.HOST}/register`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({name, email, password, phone}),
+        body: JSON.stringify({ name, email, password, phone }),
     })
 }
 

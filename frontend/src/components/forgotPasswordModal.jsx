@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faX } from '@fortawesome/free-solid-svg-icons'
 import TextInput from './micro-components/textInput';
 import { errorToast, successToast } from '../utils/toast.jsx';
-import { ToastContainer } from 'react-toastify';
 import { fetchResetPassword } from '../services/user.services.js';
 
 function ForgotPasswordModal({ isOpen, onRequestClose }) {
