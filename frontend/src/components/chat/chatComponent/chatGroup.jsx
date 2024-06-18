@@ -48,7 +48,6 @@ export default function ChatGroup() {
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(newMessage);
                 setMessages(prevMessages => [...prevMessages, newMessage]); // Update messages state correctly
-                console.log('Mensaje enviado:', newMessage);
                 setNewMessage(''); // Clear the input field after sending the message
             } else {
                 console.error('WebSocket no está abierto');
