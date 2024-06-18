@@ -76,7 +76,6 @@ function onPublishButtonClick() {
   return (
     // Renderización del componente
     <div className="create-book">
-      <ToastContainer />
       <h1>Editar un libro</h1>
       <div className="create-book-layout">
         <BookItem

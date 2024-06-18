@@ -96,7 +96,6 @@ function UploadImage({ defaultImages, imagesCallback }) {
         <button className="file-input-button" onClick={handleButtonClick}>
           Seleccionar archivo
         </button>
-        <ToastContainer />
         {fileInfos.length > 0 && (
           <div>
             Archivos seleccionados:

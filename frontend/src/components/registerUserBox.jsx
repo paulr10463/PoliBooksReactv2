@@ -76,7 +76,6 @@ const RegisterUserBox = () => {
     
     return (
         <div className=" r-border">
-            <ToastContainer />
             <div className="col r-title">
                 <b>Registrate</b>
             </div>
