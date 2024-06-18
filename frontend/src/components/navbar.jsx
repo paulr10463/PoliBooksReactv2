@@ -34,7 +34,7 @@ const Navbar = () => {
     return (
         <nav id="navbar" >
             <ul>
-                <li><a className="nav-link scrollto" href="/">Inicio</a></li>
+                <li><a className="nav-link" href="/">Inicio</a></li>
                 <li className="dropdown"><a className="nav-link" href="/search/books?title="><span>Categorías</span> <FontAwesomeIcon className= "down_chevron" icon={faChevronDown} /> </a>
                     <ul>
                         <li className="dropdown"><a href="/search/books?title="><span>Idiomas</span> <FontAwesomeIcon icon={faChevronRight} /> </a>
@@ -54,10 +54,10 @@ const Navbar = () => {
                         
                     </ul>
                 </li>
-                {authData.isAuthorized && <li><a className="nav-link scrollto" href="/seller">Vender</a></li>}
-                {authData.isAuthorized && <li><a className="nav-link scrollto" href="/chat">Chat</a></li>}
+                {authData.isAuthorized && <li><a className="nav-link" href="/seller">Vender</a></li>}
+                {authData.isAuthorized && <li><a className="nav-link" href="/chat">Chat</a></li>}
                 
-                <li><a className="nav-link" href="#services"nav-link scrollto>Quienes Somos</a></li>
+                <li><a className="nav-link" href="#services">Quienes Somos</a></li>
             </ul>
 
             <div className="search-bar">
