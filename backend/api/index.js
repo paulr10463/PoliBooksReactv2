@@ -12,11 +12,20 @@ const isAuthenticated = require('../firebaseAuthentication')
 const firebaseConfig = require('../firebaseConfig')
 require('dotenv').config()
 const { v4 } = require('uuid')
+const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const https = require('https');
+const WebSocket = require('ws');
+const url = require('url');
+const bcrypt = require('bcrypt');
 
 // Creación de una instancia en Express
 const app = express()
 app.use(express.json())
 app.use(cors())
+
+// Inicio del servidor
+const PORT = process.env.PORT || 3000
 
 // aquí iniciamos la conexión con firebase
 const appFirebase = initializeApp(firebaseConfig)
@@ -194,11 +203,15 @@ app.post('/api/register', async (req, res) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
     const uid = userCredential.user.uid
     // Guardar información adicional en Firestore
-    await addDoc(collection(db, 'users'), {
-        uid: uid,
-        phone: phone,
-        name: name
-      })
+    const hashedPass = await bcrypt.hashSync(password, 10)
+    
+    await addDoc(collection(db, 'usersjwt'), {
+      uid: uid,
+      phone: phone,
+      name: name,
+      email: email,
+      password: hashedPass
+    })
 
     res.status(200).json({ message: 'Registro exitoso' })
   } catch (error) {
@@ -336,66 +349,45 @@ app.get('/api/read/users', async (req, res) => {
 
 const jwtSecret = process.env.JWT_SECRET
 
-
+// Ruta para login con JWT
 app.post('/api/loginjwt', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Realiza una solicitud a /api/read/users para obtener la lista de usuarios
-    const response = await fetch(`http://localhost:${PORT}/api/read/users`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    const usersCol = collection(db, 'usersjwt');
+    const q = query(usersCol, where('email', '==', email));
+    const querySnapshot = await getDocs(q);
 
-    if (!response.ok) {
-      throw new Error('Error al obtener la lista de usuarios');
+    if (querySnapshot.empty) {
+      return res.status(500).json({ error: 'Credenciales inválidas' , token: null});
     }
 
-    const usersList = await response.json();
+    const userDoc = querySnapshot.docs[0];
+    const user = { id: userDoc.id, ...userDoc.data() };
 
-    // Buscar el usuario en la lista de usuarios
-    const user = usersList.find(user => user.email === email);
-
-    if (!user) {
-      return res.status(401).json({ error: 'Email inválidas' });
-    }
-
-    // Comparar la contraseña usando bcrypt
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
     if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
+      return res.status(500).json({ error: 'Credenciales inválidas' , token: null});
     }
 
-    // Generar JWT
     const token = jwt.sign(
       {
         uid: user.id,
         email: user.email
       },
       jwtSecret,
-      { expiresIn: '1h' } // Token expira en 1 hora
+      { expiresIn: '1h' }
     );
 
-    // Devolver el token y la información del usuario
     res.status(200).json({
       message: 'Autenticación exitosa',
+      isAuthorized: true,
       token,
       user: {
         uid: user.id,
         email: user.email
       }
     });
-
-    /*res.cookie('access_token', token, {
-      httpOnly: true, // la cookie solo se puede acceder en el servidor
-      secure: process.env.NODE_ENV === 'production', // la cookie solo se puede acceder a través de HTTPS en producción
-      sameSite: 'strict', // la cookie solo se puede acceder en el mismo dominio
-      maxAge: 1000 * 60 * 60 // la cookie tiene un tiempo de validez de 1 hora
-    })
-    .send({ user, token });*/
 
   } catch (error) {
     console.error('Error al iniciar sesión:', error.message);
@@ -404,8 +396,14 @@ app.post('/api/loginjwt', async (req, res) => {
 });
 
 
-// Inicio del servidor
-const PORT = process.env.PORT || 3000
+// SSL credentials
+const server = https.createServer({
+  key: fs.readFileSync('polibooks_key.pem'),
+  cert: fs.readFileSync('polibooks_cert.pem')
+}, app);
+
+const wss = new WebSocket.Server({ server: server, path: '/ws' });
+
 server.listen(PORT, () => {
   console.log(`Servidor iniciado en el puerto ${PORT}`)
 })

@@ -5,51 +5,50 @@ import Footer from '../components/footer.jsx'
 import Book from '../components/micro-components/bookForSale.jsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faX } from '@fortawesome/free-solid-svg-icons'
+
 import { useNavigate, useLocation } from 'react-router-dom';
+
 import '../styles/index.css'
 import '../styles/searchBookPage.css'
-import { useBooksByTitle } from '../hooks/useBooks.jsx'
-import LoadSpinner from '../components/shared/loadSpinnerComponent/loadSpinnerComponent.jsx'
 
 export default function SearchBookPage() {
+    const navigate = useNavigate();
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
-    const { books, isLoading, error } = useBooksByTitle(queryParams.get('title'));
+    const [ books, setBooks] = useState([]);
+
+    useEffect(() => {
+        fetch(`https://polibooksapi.azurewebsites.net/api/search/books?title=${queryParams.get('title')}`)
+            .then(response => response.json())
+            .then(data => setBooks(data))
+            .catch(error => console.log(error));
+        
+    }, []);
 
     return (
         <>
-            <Header />
-            <Navbar />
-            {queryParams.get('title') &&
-                <div className="filter-container">
-                    <div className="filter-applied">
-                        <label for="filter-applied">{queryParams.get('title')}
-                            <a href='/search/books?title='><FontAwesomeIcon icon={faX} /></a>
-                        </label>
-                    </div>
-                </div>
+        <Header />
+        <Navbar />
+            {queryParams.get('title') && 
+            <div className="filter-container">
+            <div className="filter-applied">
+                <label for="filter-applied">{queryParams.get('title')}
+                    <a href='/search/books?title='><FontAwesomeIcon icon={faX} /></a>
+                </label>
+            </div>
+            </div>
             }
-            <section id="featured-services" className="featured-services">
-                {/* Show loading spinner when isLoading is true */}
-                {isLoading && <div style={{ textAlign: "center" }}><LoadSpinner /></div>}
-
-                <div className="books-container">
-                    {/* Check if books array exists and has items */}
-                    {books && books.length > 0 ? (
-                        books.map((book, index) => (
-                            <Book key={index} book={book} />
-                        ))
-                    ) : (
-                        !isLoading && (
-                            <div style={{ textAlign: "center" }}>
-                                No se encontraron resultados
-                            </div>
-                        )
-                    )}
-                </div>
-            </section>
-
-            <Footer />
+        <section id="featured-services" className="featured-services">
+            <div className="books-container">
+                {books && books.length > 0 ? (
+                    books.map((book, index) => (
+                        <Book key={index} book={book} />
+                    ))) : (
+                    <p>No se encontraron libros.</p>
+                )}
+            </div>
+        </section> 
+        <Footer />
         </>
     );
 }

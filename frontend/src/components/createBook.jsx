@@ -72,6 +72,7 @@ export default function CreateBook() {
 
   return (
     <div className="create-book">
+      <ToastContainer />
       <h1>Publicar un libro</h1>
       <div className="create-book-layout">
         <BookItem
