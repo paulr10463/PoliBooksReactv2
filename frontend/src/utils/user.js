@@ -35,7 +35,7 @@ async function signIn(userData) {
         ws.close();
     }
 
-    ws = new WebSocket("wss://localhost:3000/ws?token=" + jwtAuth);
+    ws = new WebSocket("wss://localhost:5000/ws?token=" + jwtAuth);
 
     ws.onopen = (event) => {
         console.log("WebSocket connection established.");

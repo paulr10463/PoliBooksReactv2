@@ -1,7 +1,6 @@
 const admin = require('firebase-admin')
 require('dotenv').config()
 const jwt = require('jsonwebtoken')
-const Cookies = require('js-cookie')
 
 // Se configura la información de autenticación de Firebase desde variables de entorno
 const firebaseConfig = {
@@ -26,20 +25,27 @@ console.log('Firebase Admin SDK inicializado', adminApp.name)
 
 // Middleware de autenticación
 function isAuthenticated (req, res, next) {
-  const token = Cookies.get('authData');
+  const authHeader = req.headers['authorization'];
 
-  if(!token){
-    return res.status(403).json({ error: 'Acceso no autorizado - Token no proporcionado' });
+  if (!authHeader) {
+    return res.status(401).json({ message: 'No token provided' });
   }
 
-  try{
-    const data = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = data;
+  const token = authHeader.split(' ')[1];
 
-  }catch(error){
-    console.error('Error de verificación de token:', error)
-    return res.status(401).json({ error: 'Acceso no autorizado - Token inválido' })
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
   }
+
+  jwt.verify(token, process.env.JWTSECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: 'Failed to authenticate token' });
+    }
+
+    // Si el token es válido, guarda el payload decodificado en la solicitud para uso posterior
+    req.user = decoded;
+    next();
+  });
 }
 // Exporta el middleware de autenticación
 module.exports = isAuthenticated
