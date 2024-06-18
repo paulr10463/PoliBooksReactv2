@@ -1,9 +1,8 @@
 #header {
-    background: #fff;
+    background:  linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
     transition: all 0.5s;
     z-index: 997;
-    height: 86px;
-    box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.1);
+    height: 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -30,7 +29,7 @@
     line-height: 1;
     font-weight: 600;
     letter-spacing: 0.8px;
-    font-family: "Poppins", sans-serif;
+    font-family: "Roboto", sans-serif;
   }
   
   #header .logo img {
@@ -38,7 +37,7 @@
   }
   
   .btn-buy{
-    background: #FF5C17;
+    background: #032A30;
     padding: 6px 20px 8px 20px;
     border-radius: 4px;
     color: #fff;
@@ -53,7 +52,7 @@
   }
   
   .btn-buy:hover{
-    background: #f67b46;
+    background: #05444E;
   }
   
   #header .button-container{

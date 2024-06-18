@@ -5,6 +5,7 @@ import { useAuth } from '../utils/authContext';
 import { infoToast } from "../utils/toast";
 
 
+
 const Header = () => {
   const [ isModalOpen, setIsModalOpen ] = useState(false);
   const [ buttonValue , setButtonValue ] = useState("Iniciar sesión");
@@ -36,9 +37,6 @@ const Header = () => {
     <>
     <div id="header">
       <a href="/" className="logo"><img src="https://firebasestorage.googleapis.com/v0/b/polibooksweb.appspot.com/o/Logo.jpg?alt=media&token=c1447e9a-5903-4b71-afef-3e9a23e0039c" alt=""></img></a>
-      <div className="quote">
-        “La lectura de un buen libro es un diálogo incesante, en que el libro habla, y el alma contesta” (André Maurois).
-      </div>
       <div className="button-container">
         <input onClick={openModal} className="btn-buy" type="button" value={buttonValue}></input>
         {

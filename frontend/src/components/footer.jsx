@@ -50,7 +50,7 @@ const Footer = () => {
               <h4>Derechos de autor</h4>
               <ul>
                 <li><a href="#">Paúl Román</a></li>
-                <li><a href="#">Gabriela Manobanda</a></li>
+                <li><a href="#">Sebastián Sánchez</a></li>
                 <li><a href="#">David Yánez</a></li>
                 <li><a href="#">Santiago Salazar</a></li>
               </ul>
