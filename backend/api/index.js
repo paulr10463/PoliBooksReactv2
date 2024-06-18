@@ -344,8 +344,7 @@ app.get('/api/read/users', async (req, res) => {
   }
 });
 
-
-const jwtSecret = process.env.JWT_SECRET
+const jwtSecret = process.env.JWTSECRET
 
 
 app.post('/api/loginjwt', async (req, res) => {
