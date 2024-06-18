@@ -39,7 +39,7 @@ function onPublishButtonClick() {
       // Guardar el libro en la base de datos 
       const save = updateBookinDB(book.id, userID, tokenID, title, description, brand, level, availability, images, institution, price, contact);
       setIsSaved(save);
-  };
+  }
 
   useEffect(() => {
     const formIsValid = inputValidities.reduce((acc, curr) => acc && curr, true);
@@ -67,7 +67,7 @@ function onPublishButtonClick() {
     const newValidities = [...inputValidities];
     newValidities[index] = isValid;
     setInputValidities(newValidities);
-  };
+  }
   
   const updateImagesURLs = (images) => {
     setImages(images); 
@@ -76,7 +76,6 @@ function onPublishButtonClick() {
   return (
     // Renderización del componente
     <div className="create-book">
-      <ToastContainer />
       <h1>Editar un libro</h1>
       <div className="create-book-layout">
         <BookItem
