@@ -1,3 +1,4 @@
+import React, { useEffect, useState} from 'react'
 // Se importan componentes y utilidades necesarios.
 import Header from '../components/header.jsx'
 import Navbar from '../components/navbar.jsx'
@@ -7,13 +8,21 @@ import SellerProfileBook from '../components/micro-components/sellerProfileBook.
 import '../styles/index.css'
 import '../styles/sellerProfilePage.css'
 import { useAuth } from '../utils/authContext.jsx'
-import { useBooksByUserId } from '../hooks/useBooks.jsx'
-import LoadSpinner from '../components/shared/loadSpinnerComponent/loadSpinnerComponent.jsx'
 
 export default function SellerProfilePage() {
     const { authData } = useAuth();
-    const {books, isLoading, error} = useBooksByUserId(authData.userID,authData.idToken )
+    const [books, setBooks] = useState([]); // [books, setBooks // Estado para almacenar la lista de libros del vendedor
 
+    useEffect(() => {
+        fetch(`https://polibooksapi.azurewebsites.net/api/read/book/auth/${authData.userID}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `${authData.idToken}`
+            },
+        }).then(response => response.json())
+        .then(data => setBooks(data))
+    }, []);
 
     return (
         authData.isAuthorized ? ( // Verifica si el usuario está autorizado
@@ -22,14 +31,11 @@ export default function SellerProfilePage() {
                 <Navbar />
                 <SellerProfileBox />
                 <div className='seller-books-container'>
-                    {error}
-                    {isLoading && <LoadSpinner/> }
                     {books && books.length > 0 ? (
                         books.map((book, index) => (
                             <SellerProfileBook key={index} book={book} />
                         ))
                     ) : (
-                        !isLoading &&
                         <p>No se encontraron libros.</p>
                     )}
                 </div>

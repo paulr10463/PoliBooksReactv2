@@ -1,48 +1,54 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import '../../styles/sellerProfileBook.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPenToSquare, faTrash } from '@fortawesome/free-solid-svg-icons'
 import Swal from 'sweetalert2';
 import { useAuth } from '../../utils/authContext.jsx';
-import { deleteBooks } from '../../services/book.service.js';
-import { useState } from 'react';
-import { twoOptionShowBox , loading } from '../../services/notifications.service.js';
 
 const SellerBookItem = ({ book }) => {
     const { authData } = useAuth();
-    const [isLoading, setIsLoading ] = useState(false);
     const urlImage = "https://firebasestorage.googleapis.com/v0/b/polibooksweb.appspot.com/o/polibooks%2FnotAvailableBook.png?alt=media&token=0b68b219-5e8a-4652-92d5-7b1ddcd2d129"
     function handleEdit() {
         window.location.href = `/update/${book.id}`;
     }
 
-    useEffect( () => {
-        if(isLoading){
-            Swal.showLoading();
-        }
-    },[isLoading])
-    
-    function handleDelete() {       
-        twoOptionShowBox()
-        .then((result) => {
-            if (result.isConfirmed) {
-                setIsLoading(true);
-                deleteBooks(book.id, 13123)
-                    .then(() => {
-                        console.log("Action completed in Seller Profile");
-                        Swal.fire('¡Hecho!', 'La acción se ha completado.', 'success');
-                    })
-                    .catch((error) => {
-                        console.error("Error in Seller Profile:", error);
-                        Swal.fire('Error', error.error || 'Unknown error', 'error');
-                    })
-                    .finally(() => setIsLoading(false));
+    function handleDelete() {
+        Swal.fire({
+          title: '¿Estás seguro?',
+          text: 'Esta acción no se puede deshacer',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Sí, ¡hazlo!',
+          cancelButtonText: 'Cancelar',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Aquí puedes realizar la acción deseada cuando el usuario confirme
+            
+            fetch(`https://polibooksapi.azurewebsites.net/api/delete/book/${book.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `${authData.idToken}`
+                },
+            }).then(response =>{
+                if (response.status === 200) {
+                    Swal.fire('¡Hecho!', 'La acción se ha completado.', 'success');
+                    window.location.reload();
+                }
+                if (response.status === 401) {
+                    Swal.fire('Error', 'No tienes permiso para realizar esta acción', 'error');
+                }
+                if (response.status === 400) {
+                    Swal.fire('Error', 'No se emcpmtro el libro', 'error');
+                }
+            });
             }
-        });
-        
+
+          });
       }
       return (
-         
         <div data-aos="fade-up" id="book_for_sale_{id}" className="portfolio-item">
             <div className="portfolio-wrap">
                 <button className="btn-edit" data-book-id="1" onClick={handleEdit}><FontAwesomeIcon icon={faPenToSquare} /></button>

@@ -2,9 +2,9 @@ import "../styles/registerUserBox.css";
 import PasswordField from "./micro-components/passwordField";
 import TextInput from "./micro-components/textInput";
 import { useState, useEffect } from "react";
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { errorToast, successToast } from '../utils/toast.jsx';
-import { fetchRegisterUser } from "../services/user.services.js";
 
 const RegisterUserBox = () => {
     const [isFormValid, setIsFormValid] = useState(false);
@@ -15,7 +15,7 @@ const RegisterUserBox = () => {
         const newValidities = [...inputValidities];
         newValidities[index] = isValid;
         setInputValidities(newValidities);
-    }
+    };
 
     useEffect(() => {
         const formIsValid = inputValidities.reduce((acc, curr) => acc && curr, true);
@@ -45,6 +45,10 @@ const RegisterUserBox = () => {
         }
     }, []);
 
+
+
+
+
     function handleRegister() {
         if (!isFormValid) {
             errorToast('El formulario no es válido.')
@@ -53,9 +57,13 @@ const RegisterUserBox = () => {
             const email = document.getElementById('user-form-email').value;
             const password = document.getElementById('user-form-password').value;
             const phone = document.getElementById('user-form-phone').value;
-            
-            fetchRegisterUser(name, email, password, phone)
-            .then((response) => {
+            fetch('https://localhost:3000/api/register/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({name, email, password, phone}),
+            }).then((response) => {
                 if (response.status === 200) {
                     successToast('El usuario se registró correctamente.');
                     setTimeout(()=>(window.location.href = '/'), 2000);
@@ -68,6 +76,7 @@ const RegisterUserBox = () => {
     
     return (
         <div className=" r-border">
+            <ToastContainer />
             <div className="col r-title">
                 <b>Registrate</b>
             </div>

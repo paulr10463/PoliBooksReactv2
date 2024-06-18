@@ -4,20 +4,25 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faX } from '@fortawesome/free-solid-svg-icons'
 import TextInput from './micro-components/textInput';
 import { errorToast, successToast } from '../utils/toast.jsx';
-import { fetchResetPassword } from '../services/user.services.js';
+import { ToastContainer } from 'react-toastify';
 
-function ForgotPasswordModal({ isOpen, onRequestClose }) {
+function ForgotPasswordModal ({isOpen, onRequestClose}){
 
   const handleForgotPassword = () => {
     const email = document.getElementById('forgot-password-email').value;
-    fetchResetPassword(email)
-      .then((response) => {
-        if (response.status === 200) {
-          successToast('Se ha enviado un correo electrónico con instrucciones para cambiar tu contraseña.');
-        } else {
-          errorToast('Ha ocurrido un error. Por favor, intenta nuevamente.');
-        }
-      });
+    fetch('https://polibooksapi.azurewebsites.net/api/user/reset-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({email}),
+    }).then((response) => {
+      if (response.status === 200) {
+        successToast('Se ha enviado un correo electrónico con instrucciones para cambiar tu contraseña.');
+      } else {
+        errorToast('Ha ocurrido un error. Por favor, intenta nuevamente.');
+      }
+    });
   };
 
   const customStyles = {
@@ -57,6 +62,7 @@ function ForgotPasswordModal({ isOpen, onRequestClose }) {
 
         </Modal>
       </div>
+      <ToastContainer />
     </>
   );
 }
