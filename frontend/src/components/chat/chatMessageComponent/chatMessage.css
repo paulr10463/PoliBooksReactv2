@@ -1,0 +1,29 @@
+.chatMessage {
+    background-color: #f1f1f1; /* Light grey background */
+    border-radius: 10px; /* Rounded corners */
+    padding: 10px; /* Padding inside the message box */
+    margin: 10px 0; /* Space between messages */
+    max-width: 600px; /* Max width for the message box */
+    word-wrap: break-word; /* Ensure long words wrap to the next line */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for a slight 3D effect */
+}
+
+.chatMessageHeader {
+    display: flex; /* Align items horizontally */
+    justify-content: space-between; /* Space out username and date */
+    margin-bottom: 5px; /* Space between header and message content */
+}
+
+.chatMessageUser {
+    font-weight: bold; /* Bold text for the username */
+    color: #333; /* Darker color for the username */
+}
+
+.chatMessageDate {
+    font-size: 0.85em; /* Smaller text for the date */
+    color: #999; /* Grey color for the date */
+}
+
+.chatMessageContent {
+    color: #333; /* Darker color for the message text */
+}

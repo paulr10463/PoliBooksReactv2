@@ -1,0 +1,31 @@
+.sendMessageForm {
+    display: flex; /* Align items horizontally */
+    align-items: center; /* Center items vertically */
+    padding: 10px; /* Padding around the form */
+    border-top: 1px solid #ddd; /* Top border to separate from messages */
+    background-color: #fff; /* White background */
+}
+
+.sendMessageInput {
+    flex: 1; /* Take up remaining space */
+    padding: 10px; /* Padding inside the input */
+    border: 1px solid #ccc; /* Light border around the input */
+    border-radius: 20px; /* Rounded corners for the input */
+    font-size: 1em; /* Font size for the input text */
+    margin-right: 10px; /* Space between input and button */
+}
+
+.sendMessageButton {
+    padding: 10px 20px; /* Padding inside the button */
+    background-color: #FF5C17; /* Blue background for the button */
+    color: white; /* White text color */
+    border: none; /* Remove default border */
+    border-radius: 20px; /* Rounded corners for the button */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-size: 1em; /* Font size for the button text */
+    transition: background-color 0.3s ease; /* Smooth transition for background color */
+}
+
+.sendMessageButton:hover {
+    background-color: #f67b46; /* Darker blue on hover */
+}

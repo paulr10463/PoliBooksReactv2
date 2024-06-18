@@ -81,7 +81,6 @@ const LoginModal =  ({isOpen, onRequestClose }) => {
         </section>
       </Modal>
       <Forgot isOpen={isFPModalOpen} onRequestClose={() => setIsFPModalOpen(false)} />
-      <ToastContainer />
     </div>
   );
 }

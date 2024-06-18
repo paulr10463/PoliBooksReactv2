@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
+import { isAuth } from '../services/auth.service';
 
 const AuthContext = createContext();
 
 const checkAuthorization = () => {
   // Utilizamos la biblioteca js-cookie para obtener el valor de la cookie
   const authData = Cookies.get('authData');
-  return authData? JSON.parse(authData) : { isAuthorized: false, idToken: null, userID: null };
+  return authData ? JSON.parse(authData) : { isAuthorized: false, idToken: null, userID: null };
 };
 
 export function AuthProvider({ children }) {
@@ -32,15 +33,8 @@ export function AuthProvider({ children }) {
   }, [authData]);
 
   useEffect(() => {
-    fetch('https://polibooksapi.azurewebsites.net/api/isAuth',
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `${authData.idToken}`
-          },
-      })
-      .then((response) =>{
+    isAuth(authData.idToken)
+      .then((response) => {
         if (response.status === 401) {
           setAuthorization({ isAuthorized: false, idToken: null, userID: null });
         }

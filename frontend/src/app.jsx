@@ -12,6 +12,7 @@
     import { AuthProvider } from './utils/authContext.jsx';
     import { ToastContainer } from 'react-toastify';
     import 'react-toastify/dist/ReactToastify.css';
+    import ChatPage from './pages/ChatPage/ChatPage.jsx';
 
     function App() {
         const router = createBrowserRouter([
@@ -43,6 +44,10 @@
                 path: "/search/books",
                 element: <SearchBookPage />,
             },
+            {
+                path:"/chat",
+                element: <ChatPage />
+            }
         ]);
         
         
