@@ -5,7 +5,7 @@
     background: #FFF;
     box-shadow: 0px 0px 16px 4px rgba(0, 0, 0, 0.22);
     margin: 20px 35% 20px 35%;
-    background: linear-gradient(90deg, rgba(14,59,101,1) 0%, rgba(23,97,167,1) 100%);
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
     padding: 30px 0px;
     display: flex;
     flex-direction: column;

@@ -57,12 +57,12 @@ const Navbar = () => {
                 {authData.isAuthorized && <li><a className="nav-link scrollto" href="/seller">Vender</a></li>}
                 {authData.isAuthorized && <li><a className="nav-link scrollto" href="/seller">Chat</a></li>}
                 
-                <li><a className="nav-link scrollto" href="#services">Quienes Somos</a></li>
+                <li><a className="nav-link" href="#services"nav-link scrollto>Quienes Somos</a></li>
             </ul>
 
             <div className="search-bar">
                 <FontAwesomeIcon className="search-icon" icon={faMagnifyingGlass} />
-                <input id="navbar-search-input" className="search-input" type="text"></input>
+                <input id="navbar-search-input" className="search-input" type="text" placeholder="Buscar"></input>
                 <input onClick={handleSearch} className="search-button" type="submit" value="Buscar"></input>
             </div>
         </nav>

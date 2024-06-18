@@ -1,6 +1,7 @@
 .featured-services {
     padding: 50px 0px;
     z-index: -1;
+    
   }
   
   .books-container {
@@ -8,6 +9,6 @@
     flex-wrap: wrap;
     justify-content: space-evenly;
     z-index: -2;
-
+    
   }
   

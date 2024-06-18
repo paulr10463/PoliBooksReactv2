@@ -7,6 +7,8 @@ import Slider from '../components/slider.jsx'
 import '../styles/index.css'
 import { useState, useEffect } from 'react'
 
+
+
 export default function LandingPage() {
 
     return (

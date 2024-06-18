@@ -2,7 +2,7 @@
 .product-detail {
     font-family: "Open Sans", sans-serif;
     padding: 80px 0;
-    background: linear-gradient(90deg, rgba(14,59,101,1) 0%, rgba(23,97,167,1) 100%);
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
     display: flex;
     justify-content: center;
   }

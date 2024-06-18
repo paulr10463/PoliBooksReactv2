@@ -19,11 +19,11 @@ footer ul{
   list-style: none;
 }
  .footer{
-  margin: 10px;
+  margin: 1rem;
   margin-bottom: 0%;
   border-radius: 10px 10px 0px 0px;
-  background: linear-gradient(90deg, rgb(5, 26, 46) 0%, rgb(13, 55, 94) 100%);
-  padding: 40px 0;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  padding: 1rem 0;
 }
  .footer-col{
    width: 20%;
@@ -42,7 +42,7 @@ footer ul{
   position: absolute;
   left:0;
   bottom: -10px;
-  background-color: #FF5C17;
+  background-color: #ffffff;
   height: 2px;
   box-sizing: border-box;
   width: 50px;
@@ -56,12 +56,12 @@ footer ul{
   color: #ffffff;
   text-decoration: none;
   font-weight: 300;
-  color: #bbbbbb;
+  color: #ffffff;
   display: block;
   transition: all 0.3s ease;
 }
  .footer-col ul li a:hover{
-  color: #FF5C17;
+  color: #032A30;
   padding-left: 8px;
 }
  .footer-col .social-links a{
@@ -78,7 +78,7 @@ footer ul{
 }
  .footer-col .social-links a:hover{
   color: #ffffff;
-  background-color: #FF5C17;
+  background-color: #032A30;
 }
 
 .faIcon {

@@ -12,9 +12,10 @@ const BookSlider = ({book}) => {
             <img src={book.image.length > 0? book.image : urlImage} className="testimonial-img" alt="book for sale"></img>
             <div className="testimonial-text">
                 <h1>{book.title}</h1>
-                <h3>{book.description}</h3>
+                <p>{book.description}</p>
+                
                 <div className="star-container">
-                    <h4>Estado:</h4>
+                <h4>Estado:</h4>
                     <Stars rating={5} />
                 </div>
                 <input onClick={handleClick} type="button" value="Ver más"></input>

@@ -14,7 +14,7 @@
 .modal-content {
     display: flex;
     flex-direction: column;
-    background: linear-gradient(90deg, rgba(14, 59, 101, 1) 0%, rgba(23, 97, 167, 1) 100%);
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
     width: 450px;
     height: 550px;
     border-radius: 5px;
@@ -54,7 +54,7 @@
 
 .modal-content input {
     font-size: 12px;
-    background: #D9D9D9;
+    background: #ffffff;
     outline: none;
     padding: 10px;
     border-radius: 10px;
