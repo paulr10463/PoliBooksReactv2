@@ -5,19 +5,14 @@ import 'swiper/swiper-bundle.css';
 import "../styles/slider.css"
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { useEffect, useState } from 'react';
+import { useBooks } from '../hooks/useBooks';
+import LoadSpinner from './shared/loadSpinnerComponent/loadSpinnerComponent';
 
 const Slider = () => {
-    const [books, setBooks] = useState([]);
-
-    useEffect(() => {
-        fetch('https://polibooksapi.azurewebsites.net/api/read/books/3')
-            .then(response => response.json())
-            .then(data => setBooks(data))
-        console.log(books)
-    }, [])
+    const {books, isLoading, error} = useBooks(5);
 
     return (
+
         <section id="testimonials" className="testimonials">
             <Swiper
                 className='testimonials-slider swiper'
@@ -33,7 +28,9 @@ const Slider = () => {
                             <BookSlider book={book} />
                         </SwiperSlide>
                     ))) : (
-                    <p>No se encontraron libros.</p>
+                        <div style={{ textAlign: "center" }}>
+                            <LoadSpinner/>
+                        </div>  
                 )}
             </Swiper>
         </section>
