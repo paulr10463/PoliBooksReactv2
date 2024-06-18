@@ -12,11 +12,22 @@ const isAuthenticated = require('../firebaseAuthentication')
 const firebaseConfig = require('../firebaseConfig')
 require('dotenv').config()
 const { v4 } = require('uuid')
+const WebSocket = require('ws');
+const https = require('https');
+const fs = require('fs');
+const jwt = require('jsonwebtoken');
 
-// Creación de una instancia en Express
+
 const app = express()
 app.use(express.json())
 app.use(cors())
+
+const server = https.createServer({
+  cert: fs.readFileSync('katukamu_cert.pem'),
+  key: fs.readFileSync('katukamu_key.pem')
+}, app);
+
+const wss = new WebSocket.Server({ server: server, path: '/ws' });
 
 // aquí iniciamos la conexión con firebase
 const appFirebase = initializeApp(firebaseConfig)
@@ -49,10 +60,10 @@ app.post('/upload', upload.single('file'), async (req, res) => {
       return res.status(400).send('No se ha proporcionado un archivo.');
     }
     const storageRef = ref(firebaseStorage, `/files/${file.originalname}`);
-    const uploadTask = await uploadBytesResumable( storageRef, file.buffer );
+    const uploadTask = await uploadBytesResumable(storageRef, file.buffer);
     const downloadURL = await getDownloadURL(uploadTask.ref);
     console.log("downloadURL:", downloadURL);
-    return res.status(200).send({url: downloadURL});
+    return res.status(200).send({ url: downloadURL });
   } catch (error) {
     // No se pudo subir el archivo
     console.error(error);
@@ -177,7 +188,7 @@ app.get('/api/read/book/auth/:userID', isAuthenticated, async (req, res) => {
         ...doc.data()
       })
     })
-    
+
     res.status(200).json(booksList)
   } catch (error) {
     // No se pudo obtener la lista de libros para el usuario
@@ -195,10 +206,10 @@ app.post('/api/register', async (req, res) => {
     const uid = userCredential.user.uid
     // Guardar información adicional en Firestore
     await addDoc(collection(db, 'users'), {
-        uid: uid,
-        phone: phone,
-        name: name
-      })
+      uid: uid,
+      phone: phone,
+      name: name
+    })
 
     res.status(200).json({ message: 'Registro exitoso' })
   } catch (error) {
@@ -213,18 +224,18 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body
   try {
-      // Iniciar sesión con correo y contraseña
-      const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      console.log(await auth.currentUser.getIdToken())
-      const user = userCredential.user
-      // Inicio de sesión exitoso, puedes hacer lo que necesites aquí
-      
-      res.status(200).json({ isAuthorized: true, userID: user.uid , idToken: await auth.currentUser.getIdToken() })
-  
-    } catch (error) {
+    // Iniciar sesión con correo y contraseña
+    const userCredential = await signInWithEmailAndPassword(auth, email, password)
+    console.log(await auth.currentUser.getIdToken())
+    const user = userCredential.user
+    // Inicio de sesión exitoso, puedes hacer lo que necesites aquí
+
+    res.status(200).json({ isAuthorized: true, userID: user.uid, idToken: await auth.currentUser.getIdToken() })
+
+  } catch (error) {
     console.error('Error al iniciar sesión:', error.message)
     // Manejar errores y enviar una respuesta de error
-      res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message })
   }
 })
 
@@ -234,7 +245,7 @@ app.post('/api/user/reset-password', async (req, res) => {
   try {
     const resetPassword = await sendPasswordResetEmail(auth, email)
     console.log(resetPassword)
-    res.status(200).json({message: "Correo enviado exitosamete"})
+    res.status(200).json({ message: "Correo enviado exitosamete" })
   } catch (error) {
     // No se pudo enviar el correo de restablecimiento de contraseña
     console.error('Error al enviar el correo de restablecimiento de contraseña:', error)
@@ -244,7 +255,7 @@ app.post('/api/user/reset-password', async (req, res) => {
 })
 
 // Ruta para borrado de un libro
-app.delete('/api/delete/book/:bookId' , isAuthenticated, async (req, res) => {
+app.delete('/api/delete/book/:bookId', isAuthenticated, async (req, res) => {
   try {
     const bookId = req.params.bookId
     // Verifica si el libro existe antes de eliminarlo
@@ -270,12 +281,12 @@ app.post('/api/create/book', isAuthenticated, async (req, res) => {
   try {
     const bookData = req.body
     console.log(bookData)
-    const newBookRef = await addDoc(collection(db,'books'), bookData)
+    const newBookRef = await addDoc(collection(db, 'books'), bookData)
     res.status(201).json({ message: 'Libro creado exitosamente', bookId: newBookRef.id })
   } catch (error) {
     // No se pudo crear el libro
     console.error('Error al crear el libro:', error)
-    res.status(500).json({ error: 'Hubo un error al crear el libro',errorFire:error })
+    res.status(500).json({ error: 'Hubo un error al crear el libro', errorFire: error })
   }
 })
 
@@ -293,7 +304,7 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
       return res.status(404).json({ error: 'El libro no existe' })
     }
     // Actualiza los datos del libro en la base de datos
-    await updateDoc(bookRef, updatedData) 
+    await updateDoc(bookRef, updatedData)
     res.status(200).json({ message: 'Libro actualizado exitosamente' })
   } catch (error) {
     // No se pudo actualizar el libro
