@@ -10,14 +10,14 @@ export default function ChatGroup() {
 
     useEffect(() => {
         // Create a WebSocket connection
-        const ws = new WebSocket('ws://localhost:5000');
+        const wss = new WebSocket('wss://localhost:5000');
     
         // Set up event listeners after WebSocket is opened
-        ws.addEventListener('open', (event) => {
+        wss.addEventListener('open', (event) => {
             console.log('Conexión establecida con el servidor WebSocket');
         });
     
-        ws.addEventListener('message', (event) => {
+        wss.addEventListener('message', (event) => {
             console.log('Mensaje recibido del servidor WebSocket');
             event.data.arrayBuffer().then((data) => {
                 const message = new TextDecoder('utf-8').decode(data);
@@ -25,20 +25,20 @@ export default function ChatGroup() {
             });
         });
     
-        ws.addEventListener('close', () => {
+        wss.addEventListener('close', () => {
             console.log('Connection closed');
         });
     
-        ws.addEventListener('error', (event) => {
+        wss.addEventListener('error', (event) => {
             console.error('WebSocket error observed:', event);
         });
     
         // Update the socket state after setting up listeners
-        setSocket(ws);
+        setSocket(wss);
     
         // Clean up on component unmount
         return () => {
-            ws.close();
+            wss.close();
         };
     }, []); // Only run once, on component mount
     
