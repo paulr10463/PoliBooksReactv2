@@ -14,7 +14,7 @@ export default function SellerProfilePage() {
     const { authData } = useAuth();
     const {books, isLoading, error} = useBooksByUserId(authData.userID,authData.idToken )
 
-
+    
     return (
         authData.isAuthorized ? ( // Verifica si el usuario está autorizado
             <>
@@ -29,7 +29,7 @@ export default function SellerProfilePage() {
                             <SellerProfileBook key={index} book={book} />
                         ))
                     ) : (
-                        !isLoading &&
+                        
                         <p>No se encontraron libros.</p>
                     )}
                 </div>

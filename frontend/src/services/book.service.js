@@ -36,10 +36,7 @@ export const fetchBooksAuthByUser = async (userID, idToken) => {
     if (!response.ok) {
         throw new Error('Failed to fetch books');
     }
-    const data = response.json()
-    console.log("RESULTADOOOOOOOOO")
-    console.log(data)
-    return data
+    return response.json()
 };
 
 export const deleteBooks = async (bookId, idToken) => {

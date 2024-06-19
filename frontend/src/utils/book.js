@@ -1,3 +1,4 @@
+import { environment } from "../environment/environment.prod";
 async function saveBook(userID, tokenId, title, description, brand, level, availability, image, institution, unitCost, contact) {
     // Crear un objeto con la información del libro
     const bookData = {
@@ -13,7 +14,7 @@ async function saveBook(userID, tokenId, title, description, brand, level, avail
       userID: userID,
     };
 
-    fetch('https://polibooksapi.azurewebsites.net/api/create/book', {
+    fetch(`${environment.HOST}/create/book`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +48,7 @@ async function saveBook(userID, tokenId, title, description, brand, level, avail
       userID: userID,
     };
 
-    fetch(`https://polibooksapi.azurewebsites.net/api/update/book/${bookID}`, {
+    fetch(`${environment.HOST}/update/book/${bookID}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

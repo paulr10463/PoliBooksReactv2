@@ -73,7 +73,7 @@ export const useBooksByUserId = (userID, tokenID) => {
         setIsLoading(true);
         fetchBooksAuthByUser(userID, tokenID)
             .then(data => {
-                console.log(data)
+                console.log('data', data);
                 setBooks(data);
                 setIsLoading(false);
             })
@@ -81,7 +81,7 @@ export const useBooksByUserId = (userID, tokenID) => {
                 setError(error);
                 setIsLoading(false);
             })
-    },[userID,tokenID]);
-
-    return {books, isLoading, error};
+    },[userID, tokenID]);
+    
+    return { books, isLoading, error}
 }

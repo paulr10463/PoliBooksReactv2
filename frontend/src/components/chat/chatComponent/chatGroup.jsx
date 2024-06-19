@@ -4,7 +4,7 @@ import ChatInput from '../chatInputComponent/chatInput';
 import './chatGroup.css';
 import Message from '../../../models/message.model';
 import { useAuth } from '../../../utils/authContext';
-
+import { environment } from '../../../environment/environment.prod';
 export default function ChatGroup() {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
@@ -16,7 +16,7 @@ export default function ChatGroup() {
         let messageObject; // Declare messageObject here
 
         // Create a WebSocket connection
-        const ws = new WebSocket('ws://localhost:5000');
+        const ws = new WebSocket(environment.WS);
     
         // Set up event listeners after WebSocket is opened
         ws.addEventListener('open', (event) => {
