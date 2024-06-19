@@ -12,6 +12,8 @@ const isAuthenticated = require('../firebaseAuthentication')
 const firebaseConfig = require('../firebaseConfig')
 require('dotenv').config()
 const { v4 } = require('uuid')
+const http = require('http');
+const WebSocket = require('ws');
 
 // Creación de una instancia en Express
 const app = express()
@@ -321,8 +323,28 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
   }
 })
 
+//Websocket
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+wss.on('connection', (ws) => {
+  ws.on('message', (message) => {
+      console.log(message);
+      wss.clients.forEach((client) => {
+          if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(message);
+          }
+      });
+  });
+  
+  // Ejemplo de cómo manejar cierre de conexión
+  ws.on('close', () => {
+      console.log('Cliente desconectado.');
+  });
+});
+
 // Inicio del servidor
 const PORT = process.env.PORT || 3000
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Servidor iniciado en el puerto ${PORT}`)
 })
