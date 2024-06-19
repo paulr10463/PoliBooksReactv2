@@ -41,13 +41,16 @@ app.get('/api/item/:slug', (req, res) => {
 
 /* Rutas de la API */
 // Ruta para subir un archivo
-app.post('/upload', upload.single('file'), async (req, res) => {
+app.post('/api/upload', upload.single('file'), async (req, res) => {
   // Ruta para cargar archivos en Firebase Storage
   try {
     const file = req.file
     if (!file) {
       return res.status(400).send('No se ha proporcionado un archivo.');
     }
+    console.log(auth);
+    console.log("file.originalname:", file.originalname);
+
     const storageRef = ref(firebaseStorage, `/files/${file.originalname}`);
     const uploadTask = await uploadBytesResumable( storageRef, file.buffer );
     const downloadURL = await getDownloadURL(uploadTask.ref);
@@ -215,11 +218,27 @@ app.post('/api/login', async (req, res) => {
   try {
       // Iniciar sesión con correo y contraseña
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      console.log(await auth.currentUser.getIdToken())
       const user = userCredential.user
-      // Inicio de sesión exitoso, puedes hacer lo que necesites aquí
+      const useruid = user.uid
+      let fullName = "";
+      try {
+        const usersCol = collection(db, 'users');
+        const userQuery = query(usersCol, where('uid', '==', useruid));
+        const querySnapshot = await getDocs(userQuery);
+  
+        if (querySnapshot.empty) {
+          return res.status(404).json({ error: 'User not found' });
+        }
+        const userData = querySnapshot.docs[0].data();
+        fullName = userData.name;
+        
+      } catch (error) {
+        // No se pudo obtener la lista de libros para el usuario
+        console.error('Error getting the books list for user', error)
+        res.status(500).json({ error: 'Error getting the books list for user' })
+      }
       
-      res.status(200).json({ isAuthorized: true, userID: user.uid , idToken: await auth.currentUser.getIdToken() })
+      res.status(200).json({ isAuthorized: true, userID: user.uid , idToken: await auth.currentUser.getIdToken() , name: fullName})
   
     } catch (error) {
     console.error('Error al iniciar sesión:', error.message)

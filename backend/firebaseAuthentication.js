@@ -27,7 +27,6 @@ function isAuthenticated (req, res, next) {
   const auth = admin.auth()
   // Verifica si el usuario está autenticado utilizando el token proporcionado en el encabezado de autorización
   const idToken = req.header('Authorization')
-  console.log('En firebase Authentication' + idToken)
   if (!idToken) {
     // Si no se proporciona un token en el encabezado, se responde con un error de acceso no autorizado
     return res.status(401).json({ error: 'Acceso no autorizado - Token no proporcionado' });
@@ -38,7 +37,6 @@ function isAuthenticated (req, res, next) {
     .then((decodedToken) => {
       // El token es válido, puedes acceder a la información del usuario en decodedToken
       req.user = decodedToken
-      console.log('Token válido, usuario autenticado', decodedToken)
       next()
     })
     .catch((error) => {

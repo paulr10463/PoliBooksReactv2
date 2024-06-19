@@ -1,7 +1,9 @@
+import { environment } from "../environment/environment.prod";
+
 async function signIn(userData) {
     try {
 
-      const response = await fetch('https://polibooksapi.azurewebsites.net/api/login', {
+      const response = await fetch(`${environment.HOST}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

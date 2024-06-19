@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { errorToast, successToast } from '../../utils/toast.jsx';
+import { errorToast, successToast, infoToast } from '../../utils/toast.jsx';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, A11y } from 'swiper/modules';
 import 'swiper/swiper-bundle.css';
@@ -32,7 +32,6 @@ function UploadImage({ defaultImages, imagesCallback }) {
   const uploadFile = (file) => {
     const formData = new FormData();
     formData.append('file', file);
-
     postImage(formData)
       .then(response => {
         if (!response.ok) {
@@ -96,6 +95,7 @@ function UploadImage({ defaultImages, imagesCallback }) {
         <button className="file-input-button" onClick={handleButtonClick}>
           Seleccionar archivo
         </button>
+        <ToastContainer />
         {fileInfos.length > 0 && (
           <div>
             Archivos seleccionados:

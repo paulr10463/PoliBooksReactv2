@@ -1,14 +1,20 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ChatMessage from '../chatMessageComponent/chatMessage';
 import ChatInput from '../chatInputComponent/chatInput';
 import './chatGroup.css';
+import Message from '../../../models/message.model';
+import { useAuth } from '../../../utils/authContext';
 
 export default function ChatGroup() {
     const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState('');
+    const [newMessage, setNewMessage] = useState("");
     const [socket, setSocket] = useState(null);
-
+    const { authData } = useAuth(); // Removed setAuthorization since it's not used
+     
     useEffect(() => {
+        console.log('authData', authData.name);
+        let messageObject; // Declare messageObject here
+
         // Create a WebSocket connection
         const ws = new WebSocket('ws://localhost:5000');
     
@@ -18,10 +24,11 @@ export default function ChatGroup() {
         });
     
         ws.addEventListener('message', (event) => {
-            console.log('Mensaje recibido del servidor WebSocket');
             event.data.arrayBuffer().then((data) => {
                 const message = new TextDecoder('utf-8').decode(data);
-                setMessages(prevMessages => [...prevMessages, message]); // Update messages state correctly
+                console.log('Received message:', message);
+                messageObject = JSON.parse(message);
+                setMessages(prevMessages => [...prevMessages, messageObject]); // Update messages state correctly
             });
         });
     
@@ -40,14 +47,14 @@ export default function ChatGroup() {
         return () => {
             ws.close();
         };
-    }, []); // Only run once, on component mount
-    
+    }, [authData.name]); // Ensure useEffect runs when authData.name changes
 
     const handleSendMessage = () => {
         if (newMessage.trim() !== '') {
             if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(newMessage);
-                setMessages(prevMessages => [...prevMessages, newMessage]); // Update messages state correctly
+                const message = new Message(newMessage, authData.name, Date.now());
+                socket.send(JSON.stringify(message));
+                setMessages(prevMessages => [...prevMessages, message]); // Update messages state correctly
                 setNewMessage(''); // Clear the input field after sending the message
             } else {
                 console.error('WebSocket no está abierto');
@@ -55,14 +62,27 @@ export default function ChatGroup() {
         }
     };
 
+    function getFormattedDate(date) {
+        date = date || new Date();       
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        const year = date.getFullYear();
+        
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        
+        return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+      }
+
+
     return (
         <div className="chatGroup">
-            <div className="chatGroup__mesages">
+            <div className="chatGroup__messages">
                 {messages.map((msg, index) => (
-                    <ChatMessage key={index} message={msg} />
+                    <ChatMessage key={index} text={msg.message} user={msg.user} date={getFormattedDate(new Date(msg.date))} />
                 ))}
             </div>
-
             <ChatInput 
                 onSendMessage={handleSendMessage}
                 value={newMessage}
