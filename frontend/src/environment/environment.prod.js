@@ -1,6 +1,6 @@
 export const environment = {
     production: true,
     //HOST: 'https://polibooksapi.azurewebsites.net/api',
-    HOST: 'http://localhost:3000/api',
-    WS: "ws://localhost:3000"
+    HOST: 'http://18.119.163.240:3000/api',
+    WS: "ws://18.119.163.240:3000/"
 };

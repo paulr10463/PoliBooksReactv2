@@ -1,11 +1,11 @@
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   --color-primary: #1996bf;
-  --color-primary-secondary: #1C3762;
+  --color-primary-secondary: #1c3762;
   --color-secondary: #47d3d1;
 
   --color-card-background: #ffffff;
-  
+
   /*
   line-height: 1.5;
   font-weight: 400;
@@ -26,10 +26,8 @@ body {
   margin: 0;
   font-family: "Open Sans", sans-serif;
   color: #444444;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  
 }
 
 a {
@@ -41,4 +39,3 @@ a:hover {
   color: #3b8af2;
   text-decoration: none;
 }
-
