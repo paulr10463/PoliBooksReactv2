@@ -1,45 +1,48 @@
-//Entranamiendo de las api
-// Cambiar de esto
 // Importación de módulos
-const express = require('express')
-const cors = require('cors')
-const { initializeApp } = require('firebase/app')
-const { getFirestore, updateDoc, collection, query, limit, getDocs, where, getDoc, addDoc, doc, deleteDoc } = require('firebase/firestore')
-const { getAuth, sendPasswordResetEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword } = require("firebase/auth")
+const express = require('express');
+const cors = require('cors');
+const { initializeApp } = require('firebase/app');
+const { getFirestore, updateDoc, collection, query, limit, getDocs, where, getDoc, addDoc, doc, deleteDoc } = require('firebase/firestore');
+const { getAuth, sendPasswordResetEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword } = require("firebase/auth");
 const multer = require('multer');
 const { getStorage, ref, uploadBytesResumable, getDownloadURL } = require("firebase/storage");
-const isAuthenticated = require('../firebaseAuthentication')
-const firebaseConfig = require('../firebaseConfig')
-require('dotenv').config()
-const { v4 } = require('uuid')
-const http = require('http');
+const isAuthenticated = require('../firebaseAuthentication');
+const firebaseConfig = require('../firebaseConfig');
+require('dotenv').config();
+const fs = require('fs');
+const { v4 } = require('uuid');
+const https = require('https');
 const WebSocket = require('ws');
 
+// Load SSL certificate and key (update the file paths with your actual certificates)
+const privateKey = fs.readFileSync('../certificates/key.pem', 'utf8'); // Path to your private key
+const certificate = fs.readFileSync('../certificates/cert.pem', 'utf8'); // Path to your certificate
+const credentials = { key: privateKey, cert: certificate };
+
 // Creación de una instancia en Express
-const app = express()
-app.use(express.json())
-app.use(cors())
+const app = express();
+app.use(express.json());
+app.use(cors());
 
-// aquí iniciamos la conexión con firebase
-const appFirebase = initializeApp(firebaseConfig)
-const auth = getAuth(appFirebase)
-const db = getFirestore(appFirebase)
-const firebaseStorage = getStorage(appFirebase)
-const storage = multer.memoryStorage()
-const upload = multer({ storage: storage })
-
+// aquí iniciamos la conexión con Firebase
+const appFirebase = initializeApp(firebaseConfig);
+const auth = getAuth(appFirebase);
+const db = getFirestore(appFirebase);
+const firebaseStorage = getStorage(appFirebase);
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 app.get('/api', (req, res) => {
-  const path = `/api/item/${v4()}`
-  res.setHeader('Content-Type', 'text/html')
-  res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate')
-  res.end(`Hello! Go to item: <a href="${path}">${path}</a>`)
-})
+  const path = `/api/item/${v4()}`;
+  res.setHeader('Content-Type', 'text/html');
+  res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
+  res.end(`Hello! Go to item: <a href="${path}">${path}</a>`);
+});
 
 app.get('/api/item/:slug', (req, res) => {
-  const { slug } = req.params
-  res.end(`Item: ${slug}`)
-})
+  const { slug } = req.params;
+  res.end(`Item: ${slug}`);
+});
 
 /* Rutas de la API */
 // Ruta para subir un archivo
@@ -323,28 +326,39 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
   }
 })
 
-//Websocket
-const server = http.createServer(app);
+// WebSocket integration
+const server = https.createServer(credentials, app);
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
   ws.on('message', (message) => {
-      console.log(message);
-      wss.clients.forEach((client) => {
-          if (client !== ws && client.readyState === WebSocket.OPEN) {
-              client.send(message);
-          }
-      });
+    console.log(message);
+    wss.clients.forEach((client) => {
+      if (client !== ws && client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
   });
-  
-  // Ejemplo de cómo manejar cierre de conexión
+
   ws.on('close', () => {
-      console.log('Cliente desconectado.');
+    console.log('Cliente desconectado.');
   });
 });
 
-// Inicio del servidor
-const PORT = process.env.PORT || 3000
+// Redirect HTTP to HTTPS (Optional but recommended)
+const http = require('http');
+const httpServer = http.createServer((req, res) => {
+  const host = req.headers.host;
+  const httpsUrl = `https://${host}${req.url}`;
+  res.writeHead(301, { Location: httpsUrl });
+  res.end();
+});
+httpServer.listen(80, () => {
+  console.log('HTTP server listening on port 80 and redirecting to HTTPS');
+});
+
+// Inicio del servidor HTTPS
+const PORT = process.env.PORT || 443;
 server.listen(PORT, () => {
-  console.log(`Servidor iniciado en el puerto ${PORT}`)
-})
+  console.log(`Servidor HTTPS iniciado en el puerto ${PORT}`);
+});
