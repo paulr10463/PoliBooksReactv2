@@ -9,7 +9,7 @@ import { useBooks } from '../hooks/useBooks';
 import LoadSpinner from './shared/loadSpinnerComponent/loadSpinnerComponent';
 
 const Slider = () => {
-    const {books, isLoading, error} = useBooks(5);
+    const { books, isLoading, error } = useBooks(5);
 
     return (
 
@@ -28,9 +28,9 @@ const Slider = () => {
                             <BookSlider book={book} />
                         </SwiperSlide>
                     ))) : (
-                        <div style={{ textAlign: "center" }}>
-                            <LoadSpinner/>
-                        </div>  
+                    <div style={{ textAlign: "center" }}>
+                        <LoadSpinner />
+                    </div>
                 )}
             </Swiper>
         </section>

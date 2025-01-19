@@ -1,99 +1,103 @@
 .testimonial-item {
-    display: flex;
-    flex: auto;
-    color: #010101;
-    justify-content: center;
-    background-color: var(--color-card-background);
-    max-width: 50%;
-    margin: 0 auto;
-    border-radius: 2rem;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.231);
+  display: flex;
+  flex: auto;
+  color: #010101;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.533);
+  width: fit-content;
+  margin: 0 auto;
+  border-radius: 2rem;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.231);
+}
+
+.swiper .swiper-slide {
+  .testimonial-item {
+    padding: 2rem;
   }
-  .testimonials .testimonial-item .testimonial-text{
-    margin:  0px 40px; 
-    width: 100%;
-    display: flex;
+}
+
+.testimonials .testimonial-item .testimonial-text {
+  margin: 0px 40px;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  justify-content: space-evenly;
+  color: black;
+  border-radius: 1rem;
+  padding: 1rem;
+}
+.testimonial-item input:hover {
+  background: #054650;
+}
+.testimonial-item .testimonial-text h1 {
+  font-size: 20pt;
+  font-weight: bold;
+}
+.testimonial-item p {
+  color: #000000;
+}
+
+.testimonial-item .testimonial-text .star-container {
+  display: flex;
+  align-items: center;
+}
+
+.testimonial-item .testimonial-text .star-container h4 {
+  padding: 10px 8px 0px 10px;
+}
+
+.testimonial-item .testimonial-text {
+  max-width: 700px;
+}
+
+.testimonial-item .testimonial-img {
+  min-width: auto;
+  min-height: auto;
+  max-height: 30rem;
+  max-width: 20rem;
+  border-radius: 2rem;
+  margin: auto 0rem;
+  padding: 1rem;
+  aspect-ratio: 6.5/9;
+}
+
+.testimonial-item input {
+  background: #3a99a8;
+  padding: 6px 30px 8px 30px;
+  border-radius: 4px;
+  color: #ffffff;
+  transition: 0.5s;
+  font-size: 14pt;
+  font-family: "Roboto", sans-serif;
+  transition: 0.3s;
+  font-weight: 100;
+  border: none;
+  height: 50px;
+  width: 150px;
+  margin-top: 30px;
+  align-self: center;
+}
+
+@media screen and (max-width: 768px) {
+  .testimonial-item .testimonial-text {
+    margin: 0;
     flex-wrap: wrap;
+    display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
-    color: black;
-    border-radius: 1rem;
-    padding: 1rem;
-  }
-.testimonial-item  input:hover{
-    background: #054650
+    align-items: center;
   }
   .testimonial-item .testimonial-text h1 {
     font-size: 20pt;
     font-weight: bold;
   }
- .testimonial-item p{
-  color: #000000;
-}
-
-
- .testimonial-item .testimonial-text .star-container{
-    display: flex;
-    align-items: center;
-  }
-  
-  .testimonial-item .testimonial-text .star-container h4{
-    padding: 10px 8px 0px 10px;
-  }
-
-  .testimonial-item .testimonial-text {
-    max-width: 700px;
-  }
-
-.testimonial-item .testimonial-img {
-    min-width: auto;
-    min-height: auto;
-    max-height: 30rem;
-    max-width: 20rem;
-    border-radius: 2rem;
-    margin: auto 0rem;
-    padding: 1rem;
-  }
-  
-
-
-.testimonial-item input{
-    background: #3a99a8;
-    padding: 6px 30px 8px 30px;
-    border-radius: 4px;
-    color: #ffffff;
-    transition: 0.5s;
+  .testimonial-item .testimonial-text p {
     font-size: 14pt;
-    font-family: "Roboto", sans-serif;
-    transition: 0.3s;
-    font-weight: 100;
-    border: none;
-    height: 50px;
-    width: 150px;
-    margin-top: 30px;
-    align-self: center;
   }
-
-  @media screen and (max-width: 768px) {
-    .testimonial-item .testimonial-text {
-      margin: 0;
-      flex-wrap: wrap;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .testimonial-item .testimonial-text h1 {
-      font-size: 20pt;
-      font-weight: bold;
-    }
-    .testimonial-item .testimonial-text p {
-      font-size: 14pt;
-    }
-    .testimonial-item .testimonial-text .star-container {
-      margin: 0;
-    }
-    .testimonial-item .testimonial-img {
-      width: 50%;
-    }
-    
+  .testimonial-item .testimonial-text .star-container {
+    margin: 0;
   }
+  .testimonial-item .testimonial-img {
+    width: 50%;
+  }
+}
