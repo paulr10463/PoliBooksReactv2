@@ -8,14 +8,12 @@ import LoadSpinner from "./shared/loadSpinnerComponent/loadSpinnerComponent.jsx"
 export default function Books() {
 
     const { books, isLoading, error } = useBooks(9);
-
+    if (error) console.error(error);
     return (
         // Renderización del componente
         <section id="featured-services" className="featured-services">
 
             <div className="books-container">
-
-                {error && <p>Error: {error}</p>}
                 {isLoading && <LoadSpinner />}
                 {books && books.length > 0 ? (
                     books.map((book, index) => (
