@@ -345,18 +345,6 @@ wss.on('connection', (ws) => {
   });
 });
 
-// Redirect HTTP to HTTPS (Optional but recommended)
-const http = require('http');
-const httpServer = http.createServer((req, res) => {
-  const host = req.headers.host;
-  const httpsUrl = `https://${host}${req.url}`;
-  res.writeHead(301, { Location: httpsUrl });
-  res.end();
-});
-httpServer.listen(80, () => {
-  console.log('HTTP server listening on port 80 and redirecting to HTTPS');
-});
-
 // Inicio del servidor HTTPS
 const PORT = process.env.PORT || 443;
 server.listen(PORT, () => {
