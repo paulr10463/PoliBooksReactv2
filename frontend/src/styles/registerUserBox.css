@@ -2,9 +2,11 @@
 .r-border{
     color: #fff;
     border-radius: 15px;
-    background: #FFF;
+    background: #d4fffa;
     box-shadow: 0px 0px 16px 4px rgba(0, 0, 0, 0.22);
-    margin: 20px 35% 20px 35%;
+    margin: 40px auto;
+    max-width: 800px;
+    width: 100%;
     background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
     padding: 30px 0px;
     display: flex;
@@ -87,7 +89,8 @@
   
   .r-border input {
     font-size: 12px;
-    background: #D9D9D9;
+    line-height: 20px;
+    background: #eeeded;
     outline: none;
     padding: 10px;
     border-radius: 10px;

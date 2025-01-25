@@ -1,0 +1,121 @@
+.book-preview {
+    flex: 1;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    background: #f9f9f9;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.book-preview h2 {
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+.book-preview-details {
+    flex-wrap: wrap;
+    display: flex;
+    gap: 15px;
+}
+
+.book-preview-image img {
+    width: 200px;
+    height: auto;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.book-preview-info p {
+    margin: 5px 0;
+}
+
+
+.payment-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.payment-container-content {
+    flex: 1 1;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 8px;
+
+    @media screen and (max-width: 768px) {
+        flex-direction: column;
+    }
+}
+
+.payment-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.total-amount p {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.pay-button {
+    padding: 10px 15px;
+    background:  #FF5C17;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    font-family: "Roboto", sans-serif;
+    transition: 0.3s;
+    font-weight: 200;
+    border: none;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.pay-button:hover {
+    background: #ff8854;
+}
+
+.pay-button:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+}
+
+.error {
+    color: red;
+    font-size: 14px;
+    margin-top: 5px;
+}

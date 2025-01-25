@@ -1,4 +1,3 @@
-// src/services/bookService.js
 import { environment } from "../environment/environment.prod";
 
 export const fetchBooks = async (numItems) => {

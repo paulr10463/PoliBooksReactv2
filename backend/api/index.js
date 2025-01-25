@@ -1,5 +1,6 @@
 // Importación de módulos
 const express = require('express');
+const fetch = require('node-fetch');
 const cors = require('cors');
 const { initializeApp } = require('firebase/app');
 const { getFirestore, updateDoc, collection, query, limit, getDocs, where, getDoc, addDoc, doc, deleteDoc } = require('firebase/firestore');
@@ -298,7 +299,93 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
   }
 })
 
-// Agrega aquí el resto de las rutas, como en tu código original
+app.post('/api/payment/confirm', isAuthenticated,  async (req, res) => {
+  const { orderID, bookId, userId } = req.body;
+
+  try {
+      const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // Replace with live API in production
+      
+      const CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
+      console.log(CLIENT_ID);
+      const SECRET = process.env.PAYPAL_SECRET;
+      console.log(SECRET);
+      // Get PayPal access token
+      const auth = Buffer.from(`${CLIENT_ID}:${SECRET}`).toString('base64');
+      console.log("Auth:" + auth);
+
+      const tokenResponse = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
+          method: 'POST',
+          headers: {
+              Authorization: `Basic ${auth}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'grant_type=client_credentials',
+      });
+
+      const tokenData = await tokenResponse.json();
+      console.log(tokenData);
+      // Verify the order with PayPal
+      const orderResponse = await fetch(`${PAYPAL_API}/v2/checkout/orders/${orderID}`, {
+          headers: {
+              Authorization: `Bearer ${tokenData.access_token}`,
+          },
+      });
+
+      const orderData = await orderResponse.json();
+
+      if (orderData.status === 'COMPLETED') {
+        /// Preparar los datos de la orden para Firestore
+      const purchaseDate = new Date().toISOString();
+      const orderDetails = {
+        orderId: orderID,
+        userId: userId,
+        bookId: bookId,
+        amount: orderData.purchase_units[0].amount.value,
+        currency: orderData.purchase_units[0].amount.currency_code,
+        status: orderData.status,
+        payer: {
+          name: `${orderData.payer.name.given_name} ${orderData.payer.name.surname}`,
+          email: orderData.payer.email_address,
+        },
+        purchaseDate,
+      };
+
+      // Guardar la orden en Firestore
+      const newOrderRef = await addDoc(collection(db, 'orders'), orderDetails);
+
+      console.log(`Orden ${orderID} guardada correctamente en Firestore con ID ${newOrderRef.id}.`);
+      res.status(201).json({ success: true, message: 'Pago confirmado y orden guardada exitosamente', orderId: newOrderRef.id });
+    } else {
+      res.status(400).json({ error: 'Orden no completada' });
+    }
+  } catch (error) {
+    console.error('Error al confirmar la orden con PayPal:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+});
+
+app.get('/api/read/orders/auth/:userID', isAuthenticated, async (req, res) => {
+  try {
+    const userID = req.params.userID; // Obtener el ID del usuario de los parámetros de la URL
+    console.log(`Consultando órdenes para el usuario: ${userID}`);
+
+    const ordersCol = collection(db, 'orders'); // Referencia a la colección 'orders'
+    const querySnapshot = await getDocs(query(ordersCol, where('userId', '==', userID))); // Filtrar órdenes por 'userID'
+
+    const ordersList = [];
+    querySnapshot.forEach((doc) => {
+      ordersList.push({
+        id: doc.id, // Incluir el ID del documento
+        ...doc.data(), // Agregar los datos del documento
+      });
+    });
+
+    res.status(200).json(ordersList); // Responder con la lista de órdenes
+  } catch (error) {
+    console.error('Error obteniendo las órdenes para el usuario', error);
+    res.status(500).json({ error: 'Error obteniendo las órdenes para el usuario' });
+  }
+});
 
 // Configuración del servidor
 const PORT = process.env.PORT || 3000;

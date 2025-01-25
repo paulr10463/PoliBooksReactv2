@@ -6,6 +6,7 @@
     import UpdateBookPage from './pages/UpdateBookPage.jsx';
     import SellerProfilePage from './pages/SellerProfilePage.jsx';
     import LandingPage from './pages/LandingPage.jsx';
+    import PaymentPage from './pages/PaymentPage/PaymentPage.jsx';
     import SearchBookPage from './pages/SearchBookPage.jsx';
     import {  createBrowserRouter,  RouterProvider,} from "react-router-dom";
     import RegisterUserPage from './pages/RegisterUserPage.jsx';
@@ -13,6 +14,7 @@
     import { ToastContainer } from 'react-toastify';
     import 'react-toastify/dist/ReactToastify.css';
     import ChatPage from './pages/ChatPage/ChatPage.jsx';
+import OrdersPage from './pages/OrdersPage/OrdersPage.jsx';
 
     function App() {
         const router = createBrowserRouter([
@@ -47,7 +49,15 @@
             {
                 path:"/chat",
                 element: <ChatPage />
-            }
+            },
+            {
+                path: "/payment",
+                element: <PaymentPage />,
+            },
+            {
+                path: "/orders",
+                element: <OrdersPage />,
+            },
         ]);
         
         

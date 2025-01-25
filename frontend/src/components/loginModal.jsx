@@ -23,12 +23,11 @@ const LoginModal =  ({isOpen, onRequestClose }) => {
     setIsFPModalOpen(true);
   };
 
-  const handleLogin = () => {
+  const handleLogin = (e) => {
+    e.preventDefault();
     const email = document.getElementById('modal-email-login').value;
     const password = document.getElementById('modal-password-login').value;
-    console.log(email, password);
     signIn({email, password}).then((data) => {
-      console.log(data);
       if(data.isAuthorized){
         successToast("Inicio de sesión exitoso");
         setAuthorization(data);
@@ -36,8 +35,8 @@ const LoginModal =  ({isOpen, onRequestClose }) => {
       }else{
         errorToast('Correo o contraseña incorrectos');
       }  
-    }).catch((error) => {
-      errorToast('Error al iniciar sesión');
+    }).catch(() => {
+      errorToast('Correo o contraseña incorrectos');
     });
   };
 
@@ -68,13 +67,13 @@ const LoginModal =  ({isOpen, onRequestClose }) => {
             <a onClick={onRequestClose} className="modal-close-icon"><FontAwesomeIcon icon={faX} /></a>
             <h2>Iniciar sesión</h2>
             <p className="modal-text-description">Inicia sesión para publicar tu Libro a la venta</p>
-            <form>  
+            <form onSubmit={ handleLogin}>  
               <div className="inputs-container">
               <TextInput type="email" id="modal-email-login" placeholder="Usuario o correo electrónico"/>
               <PasswordField id="modal-password-login" placeholder="Contraseña"/>
               </div> 
               <a onClick={openModal} className="modal-link">¿Olvidaste tu contraseña?</a>
-              <button onClick={handleLogin} className="modal-button" type="button">Iniciar sesión</button>
+              <button className="modal-button" type="submit">Iniciar sesión</button>
               <p className="modal-footer-text">¿No tienes cuenta? <a href="/register"> <b>Registrate</b></a></p>
             </form>
           </div>

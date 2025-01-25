@@ -1,0 +1,81 @@
+.orders-container{
+    max-width: 1200px;
+    margin: 30px auto;
+
+    .loading-container{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+}
+.order-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+    justify-content: center;
+  }
+  
+  .order-card {
+    background: #ffffff;
+    width: 100%;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .order-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .order-header h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333333;
+    margin: 0;
+  }
+  
+  .order-status {
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 15px;
+    text-transform: uppercase;
+  }
+  
+  .order-status.completed {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .order-status.pending {
+    background-color: #ff9800;
+    color: white;
+  }
+  
+  .order-status.failed {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  .order-body p {
+    color: #555555;
+    margin: 5px 0;
+  }
+  
+  .order-body strong {
+    font-weight: 600;
+  }
+  

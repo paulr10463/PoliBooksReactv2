@@ -30,12 +30,3 @@ body {
   min-height: 100vh;
 }
 
-a {
-  color: #076fa3;
-  text-decoration: none;
-}
-
-a:hover {
-  color: #3b8af2;
-  text-decoration: none;
-}
