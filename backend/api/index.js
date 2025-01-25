@@ -9,22 +9,8 @@ const { getStorage, ref, uploadBytesResumable, getDownloadURL } = require("fireb
 const isAuthenticated = require('../firebaseAuthentication');
 const firebaseConfig = require('../firebaseConfig');
 require('dotenv').config();
-const fs = require('fs');
-const { v4 } = require('uuid');
-const https = require('https');
-const WebSocket = require('ws');
 
-// Load SSL certificate and key (update the file paths with your actual certificates)
-const privateKey = fs.readFileSync('./certificates/key.pem', 'utf8'); // Path to your private key
-const certificate = fs.readFileSync('./certificates/cert.pem', 'utf8'); // Path to your certificate
-const credentials = { key: privateKey, cert: certificate };
-
-// Creación de una instancia en Express
-const app = express();
-app.use(express.json());
-app.use(cors());
-
-// aquí iniciamos la conexión con Firebase
+// Inicialización de Firebase
 const appFirebase = initializeApp(firebaseConfig);
 const auth = getAuth(appFirebase);
 const db = getFirestore(appFirebase);
@@ -32,65 +18,51 @@ const firebaseStorage = getStorage(appFirebase);
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+// Creación de una instancia en Express
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+// Ruta básica de prueba
 app.get('/api', (req, res) => {
-  const path = `/api/item/${v4()}`;
+  const path = `/api/item/${require('uuid').v4()}`;
   res.setHeader('Content-Type', 'text/html');
   res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
-  res.end(`Hello! Go to item: <a href="${path}">${path}</a>`);
+  res.send(`Hello! Go to item: <a href="${path}">${path}</a>`);
 });
 
-app.get('/api/item/:slug', (req, res) => {
-  const { slug } = req.params;
-  res.end(`Item: ${slug}`);
-});
-
-/* Rutas de la API */
-// Ruta para subir un archivo
+// Rutas de API (subida de archivo, lectura de libros, autenticación, etc.)
 app.post('/api/upload', upload.single('file'), async (req, res) => {
-  // Ruta para cargar archivos en Firebase Storage
   try {
-    const file = req.file
+    const file = req.file;
     if (!file) {
       return res.status(400).send('No se ha proporcionado un archivo.');
     }
-    console.log(auth);
-    console.log("file.originalname:", file.originalname);
-
     const storageRef = ref(firebaseStorage, `/files/${file.originalname}`);
-    const uploadTask = await uploadBytesResumable( storageRef, file.buffer );
+    const uploadTask = await uploadBytesResumable(storageRef, file.buffer);
     const downloadURL = await getDownloadURL(uploadTask.ref);
-    console.log("downloadURL:", downloadURL);
-    return res.status(200).send({url: downloadURL});
+    res.status(200).send({ url: downloadURL });
   } catch (error) {
-    // No se pudo subir el archivo
-    console.error(error);
+    console.error('Error al subir archivo:', error);
     res.status(500).send('Error al subir el archivo.');
   }
 });
 
-// Obtener todos los libros
-
-//Aquí generamos solicitudes con la API
+// Más rutas (ejemplo: CRUD de libros, autenticación, búsqueda)
 app.get('/api/read/books', async (req, res) => {
   try {
-    const booksCol = collection(db, 'books')
-    const booksSnapshot = await getDocs(booksCol)
-    const booksList = []
-
-    booksSnapshot.forEach((doc) => {
-      booksList.push({
-        id: doc.id,
-        ...doc.data()
-      })
-    })
-
-    res.status(200).json(booksList)
+    const booksCol = collection(db, 'books');
+    const booksSnapshot = await getDocs(booksCol);
+    const booksList = booksSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    res.status(200).json(booksList);
   } catch (error) {
-    // No se pudo obtener la lista de libros
-    console.error('Error getting the books list', error)
-    res.status(500).json({ error: 'Error getting the books list' })
+    console.error('Error al obtener libros:', error);
+    res.status(500).json({ error: 'Error al obtener la lista de libros' });
   }
-})
+});
+
+
+
 
 // Obtener un libro por su ID
 app.get('/api/read/book/:bookId', async (req, res) => {
@@ -326,27 +298,10 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
   }
 })
 
-// WebSocket integration
-const server = https.createServer(credentials, app);
-const wss = new WebSocket.Server({ server });
+// Agrega aquí el resto de las rutas, como en tu código original
 
-wss.on('connection', (ws) => {
-  ws.on('message', (message) => {
-    console.log(message);
-    wss.clients.forEach((client) => {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(message);
-      }
-    });
-  });
-
-  ws.on('close', () => {
-    console.log('Cliente desconectado.');
-  });
-});
-
-// Inicio del servidor HTTPS
-const PORT = process.env.PORT || 443;
-server.listen(PORT, () => {
-  console.log(`Servidor HTTPS iniciado en el puerto ${PORT}`);
+// Configuración del servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor iniciado en el puerto ${PORT}`);
 });
