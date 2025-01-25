@@ -15,8 +15,8 @@ const https = require('https');
 const WebSocket = require('ws');
 
 // Load SSL certificate and key (update the file paths with your actual certificates)
-const privateKey = fs.readFileSync('../certificates/key.pem', 'utf8'); // Path to your private key
-const certificate = fs.readFileSync('../certificates/cert.pem', 'utf8'); // Path to your certificate
+const privateKey = fs.readFileSync('./certificates/key.pem', 'utf8'); // Path to your private key
+const certificate = fs.readFileSync('./certificates/cert.pem', 'utf8'); // Path to your certificate
 const credentials = { key: privateKey, cert: certificate };
 
 // Creación de una instancia en Express
