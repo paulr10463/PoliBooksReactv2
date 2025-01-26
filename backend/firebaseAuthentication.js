@@ -25,28 +25,42 @@ const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, 'base64');
 const IV_LENGTH = 16;
 
 /**
- * Encripta un token usando AES-256
+ * Encripta un token usando AES-256-GCM
  * @param {string} text - El token a encriptar
- * @returns {string} - Token encriptado
+ * @returns {string} - Token encriptado con formato: iv:tag:encrypted
  */
 function encryptToken(text) {
-  const iv = crypto.randomBytes(IV_LENGTH);
-  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'utf8'), iv);
+  const iv = crypto.randomBytes(12); // GCM recomienda 12 bytes para el IV
+  const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(ENCRYPTION_KEY, 'utf8'), iv);
+  
   let encrypted = cipher.update(text, 'utf8', 'base64');
   encrypted += cipher.final('base64');
-  return `${iv.toString('base64')}:${encrypted}`;
+  
+  // Obtener el tag de autenticación
+  const authTag = cipher.getAuthTag();
+  
+  // Retornar el IV, tag de autenticación y el texto cifrado concatenados
+  return `${iv.toString('base64')}:${authTag.toString('base64')}:${encrypted}`;
 }
 
 /**
- * Desencripta un token encriptado
- * @param {string} encryptedText - Token encriptado
- * @returns {string} - Token desencriptado
+ * Función complementaria para descifrar
+ * @param {string} encryptedText - Texto cifrado en formato iv:tag:encrypted
+ * @returns {string} - Texto descifrado
  */
 function decryptToken(encryptedText) {
-  const [iv, encrypted] = encryptedText.split(':').map((part) => Buffer.from(part, 'base64'));
-  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'utf8'), iv);
+  const [ivBase64, authTagBase64, encryptedBase64] = encryptedText.split(':');
+  
+  const iv = Buffer.from(ivBase64, 'base64');
+  const authTag = Buffer.from(authTagBase64, 'base64');
+  const encrypted = Buffer.from(encryptedBase64, 'base64');
+  
+  const decipher = crypto.createDecipheriv('aes-256-gcm', Buffer.from(ENCRYPTION_KEY, 'utf8'), iv);
+  decipher.setAuthTag(authTag);
+  
   let decrypted = decipher.update(encrypted, 'base64', 'utf8');
   decrypted += decipher.final('utf8');
+  
   return decrypted;
 }
 
