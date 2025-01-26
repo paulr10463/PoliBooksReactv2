@@ -5,7 +5,7 @@ require('dotenv').config();
 // Configuración de Firebase Admin
 const firebaseConfig = {
   privateKeyId: process.env.PRIVATE_KEY_ID,
-  privateKey: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'), // Corrige saltos de línea en la llave
+  privateKey: process.env.PRIVATE_KEY, // Corrige saltos de línea en la llave
   clientEmail: process.env.CLIENT_EMAIL,
   clientId: process.env.CLIENT_ID,
   authUri: process.env.AUTH_URI,
