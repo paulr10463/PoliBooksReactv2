@@ -71,7 +71,6 @@ export default function CreateBook() {
         price,
         contact,
       };
-      console.log(bookPayload);
       try {
         await saveBook(bookPayload, tokenID); // Save the book
         successToast('Libro guardado exitosamente');
@@ -117,8 +116,6 @@ export default function CreateBook() {
   };
 
   const updateImagesURLs = (images) => {
-    console.log("Images changed in parent 2");
-    console.log(images);
     setImages(images); 
   };
 

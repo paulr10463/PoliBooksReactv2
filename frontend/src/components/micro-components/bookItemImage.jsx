@@ -5,8 +5,6 @@ import UploadImage from './uploadImage.jsx'
 const bookItem = ({ title, description, handleCallback  }) => {
     const [images, setImages] = useState();
     const handleImageChanges = (images) => {
-        console.log("Images changed");
-        console.log(images);
         setImages(images);
     };   
 

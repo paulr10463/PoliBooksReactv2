@@ -15,8 +15,9 @@ const { getStorage, ref, uploadBytesResumable, getDownloadURL } = require("fireb
 const { isAuthenticated, encryptToken, removeRefreshToken } = require('../firebaseAuthentication');
 const firebaseConfig = require('../firebaseConfig');
 require('dotenv').config();
-const { fileTypeFromBuffer } = require('file-type');
-const {sanitizeInput, validateUID } = require('../utils/sanitizeUtils');
+
+const { sanitizeInput, validateUID } = require('../utils/sanitizeUtils');
+
 // Inicialización de Firebase
 const appFirebase = initializeApp(firebaseConfig);
 const auth = getAuth(appFirebase);
@@ -412,10 +413,10 @@ app.post('/api/login', async (req, res) => {
     const idToken = await auth.currentUser.getIdToken();
     const encryptedToken = encryptToken(idToken);
 
-    return res.status(200).json({ 
-      isAuthorized: true, 
-      userID: user.uid, 
-      idToken: encryptedToken 
+    return res.status(200).json({
+      isAuthorized: true,
+      userID: user.uid,
+      idToken: encryptedToken
     });
   } catch (error) {
     console.error('Error al iniciar sesión:', error.message);
@@ -542,32 +543,9 @@ app.post('/api/create/book', isAuthenticated, async (req, res) => {
   try {
     // Sanitizar y validar los datos del libro
     const sanitizedBookData = sanitizeInput(req.body);
-    const { title, author, genre, publishedYear } = sanitizedBookData;
-
-    if (!title || typeof title !== 'string' || title.trim().length < 3) {
-      return res.status(400).json({ error: 'El título es requerido y debe tener al menos 3 caracteres' });
-    }
-
-    if (!author || typeof author !== 'string' || author.trim().length < 3) {
-      return res.status(400).json({ error: 'El autor es requerido y debe tener al menos 3 caracteres' });
-    }
-
-    if (!genre || typeof genre !== 'string' || genre.trim().length === 0) {
-      return res.status(400).json({ error: 'El género es requerido' });
-    }
-
-    if (!publishedYear || typeof publishedYear !== 'number' || publishedYear < 1000 || publishedYear > new Date().getFullYear()) {
-      return res.status(400).json({ error: 'El año de publicación es inválido' });
-    }
 
     // Crear el libro en la base de datos
-    const newBookRef = await addDoc(collection(db, 'books'), {
-      title: title.trim(),
-      author: author.trim(),
-      genre: genre.trim(),
-      publishedYear,
-      createdAt: new Date().toISOString(),
-    });
+    const newBookRef = await addDoc(collection(db, 'books'), sanitizedBookData)
 
     console.log('Libro creado exitosamente:', newBookRef.id);
     return res.status(201).json({ message: 'Libro creado exitosamente', bookId: newBookRef.id });

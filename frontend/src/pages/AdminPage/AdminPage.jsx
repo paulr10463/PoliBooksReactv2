@@ -16,7 +16,6 @@ export default function AdminPage() {
     const [page, setPage] = useState(1);
     const [limit] = useState(10); // Fixed limit for pagination
     const [totalPages, setTotalPages] = useState(1); // Total pages for pagination
-    console.log(authData);
     useEffect(() => {
         if (authData.isAuthorized) {
             setLoading(true);
