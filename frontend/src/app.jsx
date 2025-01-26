@@ -14,7 +14,8 @@
     import { ToastContainer } from 'react-toastify';
     import 'react-toastify/dist/ReactToastify.css';
     import ChatPage from './pages/ChatPage/ChatPage.jsx';
-import OrdersPage from './pages/OrdersPage/OrdersPage.jsx';
+    import OrdersPage from './pages/OrdersPage/OrdersPage.jsx';
+    import AdminPage from './pages/AdminPage/AdminPage.jsx';
 
     function App() {
         const router = createBrowserRouter([
@@ -58,6 +59,10 @@ import OrdersPage from './pages/OrdersPage/OrdersPage.jsx';
                 path: "/orders",
                 element: <OrdersPage />,
             },
+            {
+                path: "/admin",
+                element: <AdminPage />,
+            }
         ]);
         
         

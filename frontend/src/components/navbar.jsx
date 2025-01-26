@@ -7,9 +7,16 @@ import { faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { useAuth } from '../utils/authContext';
 import { useEffect, useState } from "react";
 import { redirect } from "react-router-dom";
+import { isAdmin } from "../services/admin.service";
 
 const Navbar = () => {
- 
+    const [admin, setAdmin] = useState(false);
+    const { authData } = useAuth();
+    isAdmin(authData.idToken).then((response) => {
+        if (response) {
+            setAdmin(true);
+        }
+    });
     function handleSearch() {
         const searchInputValue = document.getElementById("navbar-search-input").value;
         window.location.href = `/search/books?title=${encodeURIComponent(searchInputValue)}`;
@@ -30,7 +37,7 @@ const Navbar = () => {
         }
       };
 
-    const { authData } = useAuth();
+
     return (
         <nav id="navbar" >
             <ul>
@@ -56,7 +63,8 @@ const Navbar = () => {
                 </li>
                 {authData.isAuthorized && <li><a className="nav-link" href="/seller">Vender</a></li>}
                 {authData.isAuthorized && <li><a className="nav-link" href="/orders">Ordenes</a></li>}
-                
+                {admin && <li><a className="nav-link" href="/admin">Admin</a></li>}
+
                 <li><a className="nav-link" href="#services">Quienes Somos</a></li>
             </ul>
 

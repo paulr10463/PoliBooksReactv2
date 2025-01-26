@@ -3,11 +3,16 @@ const express = require('express');
 const fetch = require('node-fetch');
 const cors = require('cors');
 const { initializeApp } = require('firebase/app');
-const { getFirestore, updateDoc, collection, query, limit, getDocs, where, getDoc, addDoc, doc, deleteDoc } = require('firebase/firestore');
-const { getAuth, sendPasswordResetEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword } = require("firebase/auth");
+const { getFirestore, updateDoc, collection, query, limit, orderBy, startAfter, getDocs, where, getDoc, addDoc, doc, deleteDoc } = require('firebase/firestore');
+const {
+  getAuth,
+  sendPasswordResetEmail,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} = require("firebase/auth");
 const multer = require('multer');
 const { getStorage, ref, uploadBytesResumable, getDownloadURL } = require("firebase/storage");
-const isAuthenticated = require('../firebaseAuthentication');
+const { isAuthenticated, encryptToken, removeRefreshToken } = require('../firebaseAuthentication');
 const firebaseConfig = require('../firebaseConfig');
 require('dotenv').config();
 
@@ -24,6 +29,73 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+const checkAdmin = async (req, res, next) => {
+  try {
+    const userId = req.user.uid;
+    // Buscar usuario en Firestore
+    const usersCol = collection(db, 'users');
+    const userQuery = query(usersCol, where('uid', '==', userId));
+    const querySnapshot = await getDocs(userQuery);
+
+    if (querySnapshot.empty) {
+      return res.status(403).json({ error: 'Usuario no encontrado o no autorizado' });
+    }
+
+    const userData = querySnapshot.docs[0].data();
+
+    if (userData.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado: no eres administrador' });
+    }
+
+    next(); // Usuario es administrador, continuar con la solicitud
+  } catch (error) {
+    console.error('Error al verificar rol de administrador:', error.message);
+    res.status(500).json({ error: 'Error al verificar el rol de administrador' });
+  }
+};
+
+// Ruta protegida solo para administradores
+app.get('/api/admin', isAuthenticated, checkAdmin, async (req, res) => {
+  res.status(200).json({ message: 'Bienvenido al panel de administrador' });
+});
+
+const logCriticalEvent = async (eventType, description, additionalData = {}) => {
+  try {
+    const logData = {
+      eventType, // Tipo de evento (Error DB, Intento fallido, etc.)
+      description, // Descripción del evento
+      additionalData, // Información adicional
+      timestamp: new Date().toISOString(), // Fecha y hora del evento
+    };
+
+    // Guardar el log en Firestore
+    await addDoc(collection(db, 'critical_logs'), logData);
+    console.log('Evento crítico registrado:', logData);
+  } catch (error) {
+    console.error('Error al registrar el evento crítico:', error);
+  }
+};
+
+const logRequests = async (req, res, next) => {
+  try {
+    const logData = {
+      method: req.method,
+      url: req.originalUrl,
+      headers: req.headers,
+      body: req.body,
+      timestamp: new Date().toISOString(),
+    };
+    // Guardar el log en Firestore
+    await addDoc(collection(db, 'logs'), logData);
+  } catch (error) {
+    console.error('Error al guardar el log:', error);
+  }
+  next();
+};
+
+// Usar el middleware en todas las rutas
+app.use(logRequests);
+
 // Ruta básica de prueba
 app.get('/api', (req, res) => {
   const path = `/api/item/${require('uuid').v4()}`;
@@ -32,20 +104,30 @@ app.get('/api', (req, res) => {
   res.send(`Hello! Go to item: <a href="${path}">${path}</a>`);
 });
 
-// Rutas de API (subida de archivo, lectura de libros, autenticación, etc.)
-app.post('/api/upload', upload.single('file'), async (req, res) => {
+app.post('/api/upload', isAuthenticated, upload.array('files', 5), async (req, res) => {
   try {
-    const file = req.file;
-    if (!file) {
-      return res.status(400).send('No se ha proporcionado un archivo.');
+    const files = req.files; // `req.files` contiene todos los archivos subidos
+
+    if (!files || files.length === 0) {
+      return res.status(400).send('No se han proporcionado archivos.');
     }
-    const storageRef = ref(firebaseStorage, `/files/${file.originalname}`);
-    const uploadTask = await uploadBytesResumable(storageRef, file.buffer);
-    const downloadURL = await getDownloadURL(uploadTask.ref);
-    res.status(200).send({ url: downloadURL });
+
+    // Procesar y subir cada archivo a Firebase Storage
+    const uploadPromises = files.map(async (file) => {
+      const storageRef = ref(firebaseStorage, `/files/${file.originalname}`);
+      const uploadTask = await uploadBytesResumable(storageRef, file.buffer);
+      const downloadURL = await getDownloadURL(uploadTask.ref);
+      return { originalName: file.originalname, url: downloadURL };
+    });
+
+    // Esperar a que todos los archivos se suban
+    const uploadedFiles = await Promise.all(uploadPromises);
+
+    // Responder con las URLs de los archivos subidos
+    res.status(200).send({ uploadedFiles });
   } catch (error) {
-    console.error('Error al subir archivo:', error);
-    res.status(500).send('Error al subir el archivo.');
+    console.error('Error al subir archivos:', error);
+    res.status(500).send('Error al subir los archivos.');
   }
 });
 
@@ -141,8 +223,7 @@ app.get('/api/search/books', async (req, res) => {
 
 // Ruta protegida que requiere autenticación
 app.get('/api/isAuth', isAuthenticated, (req, res) => {
-  const userId = req.user.uid
-  res.json({ message: `Usuario autenticado con ID: ${userId}` })
+  res.status(200);
 })
 
 app.get('/api/read/book/auth/:userID', isAuthenticated, async (req, res) => {
@@ -157,7 +238,7 @@ app.get('/api/read/book/auth/:userID', isAuthenticated, async (req, res) => {
         ...doc.data()
       })
     })
-    
+
     res.status(200).json(booksList)
   } catch (error) {
     // No se pudo obtener la lista de libros para el usuario
@@ -175,10 +256,10 @@ app.post('/api/register', async (req, res) => {
     const uid = userCredential.user.uid
     // Guardar información adicional en Firestore
     await addDoc(collection(db, 'users'), {
-        uid: uid,
-        phone: phone,
-        name: name
-      })
+      uid: uid,
+      phone: phone,
+      name: name
+    })
 
     res.status(200).json({ message: 'Registro exitoso' })
   } catch (error) {
@@ -193,43 +274,45 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body
   try {
-      // Iniciar sesión con correo y contraseña
-      const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      const user = userCredential.user
-      const useruid = user.uid
-      let fullName = "";
-      try {
-        const usersCol = collection(db, 'users');
-        const userQuery = query(usersCol, where('uid', '==', useruid));
-        const querySnapshot = await getDocs(userQuery);
-  
-        if (querySnapshot.empty) {
-          return res.status(404).json({ error: 'User not found' });
-        }
-        const userData = querySnapshot.docs[0].data();
-        fullName = userData.name;
-        
-      } catch (error) {
-        // No se pudo obtener la lista de libros para el usuario
-        console.error('Error getting the books list for user', error)
-        res.status(500).json({ error: 'Error getting the books list for user' })
-      }
-      
-      res.status(200).json({ isAuthorized: true, userID: user.uid , idToken: await auth.currentUser.getIdToken() , name: fullName})
-  
-    } catch (error) {
-    console.error('Error al iniciar sesión:', error.message)
+    // Iniciar sesión con correo y contraseña
+    const userCredential = await signInWithEmailAndPassword(auth, email, password)
+    const user = userCredential.user
+    res.status(200).json({ isAuthorized: true, userID: user.uid, idToken: encryptToken(await auth.currentUser.getIdToken()) })
+
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error.message);
+    // Registrar intentos fallidos
+    if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-email') {
+      await logCriticalEvent(
+        'LOGIN_FAILURE',
+        `Intento fallido de inicio de sesión para el correo ${email}`,
+        { email, errorCode: error.code }
+      );
+    }
     // Manejar errores y enviar una respuesta de error
-      res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message })
   }
 })
+
+app.post('/api/logout', isAuthenticated, async (req, res) => {
+  try {
+    const userID = req.body.userID;
+    await removeRefreshToken(userID);
+
+    console.log("User successfully logged out");
+    res.status(200).json({ message: "User successfully logged out" });
+  } catch (error) {
+    console.error("Error during logout:", error.message);
+    res.status(500).json({ error: "Logout failed" });
+  }
+});
 
 // Ruta para envio de correo de recuperacion de contraseña
 app.post('/api/user/reset-password', async (req, res) => {
   const { email } = req.body
   try {
     const resetPassword = await sendPasswordResetEmail(auth, email)
-    res.status(200).json({message: "Correo enviado exitosamete"})
+    res.status(200).json({ message: "Correo enviado exitosamete" })
   } catch (error) {
     // No se pudo enviar el correo de restablecimiento de contraseña
     console.error('Error al enviar el correo de restablecimiento de contraseña:', error)
@@ -239,7 +322,7 @@ app.post('/api/user/reset-password', async (req, res) => {
 })
 
 // Ruta para borrado de un libro
-app.delete('/api/delete/book/:bookId' , isAuthenticated, async (req, res) => {
+app.delete('/api/delete/book/:bookId', isAuthenticated, async (req, res) => {
   try {
     const bookId = req.params.bookId
     // Verifica si el libro existe antes de eliminarlo
@@ -255,7 +338,8 @@ app.delete('/api/delete/book/:bookId' , isAuthenticated, async (req, res) => {
     res.status(200).json({ message: 'Libro eliminado exitosamente' })
   } catch (error) {
     // No se pudo eliminar el libro
-    console.error('Error al eliminar el libro:', error)
+    console.error('Error al eliminar el libro:', error);
+    await logCriticalEvent('DATABASE_ERROR', 'Error al eliminar un libro', { bookId, error: error.message });
     res.status(500).json({ error: 'Hubo un error al eliminar el libro', errorFire: error })
   }
 })
@@ -264,12 +348,12 @@ app.delete('/api/delete/book/:bookId' , isAuthenticated, async (req, res) => {
 app.post('/api/create/book', isAuthenticated, async (req, res) => {
   try {
     const bookData = req.body
-    const newBookRef = await addDoc(collection(db,'books'), bookData)
+    const newBookRef = await addDoc(collection(db, 'books'), bookData)
     res.status(201).json({ message: 'Libro creado exitosamente', bookId: newBookRef.id })
   } catch (error) {
     // No se pudo crear el libro
     console.error('Error al crear el libro:', error)
-    res.status(500).json({ error: 'Hubo un error al crear el libro',errorFire:error })
+    res.status(500).json({ error: 'Hubo un error al crear el libro', errorFire: error })
   }
 })
 
@@ -287,7 +371,7 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
       return res.status(404).json({ error: 'El libro no existe' })
     }
     // Actualiza los datos del libro en la base de datos
-    await updateDoc(bookRef, updatedData) 
+    await updateDoc(bookRef, updatedData)
     res.status(200).json({ message: 'Libro actualizado exitosamente' })
   } catch (error) {
     // No se pudo actualizar el libro
@@ -296,37 +380,37 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
   }
 })
 
-app.post('/api/payment/confirm', isAuthenticated,  async (req, res) => {
+app.post('/api/payment/confirm', isAuthenticated, async (req, res) => {
   const { orderID, bookId, userId } = req.body;
 
   try {
-      const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // Replace with live API in production
-      
-      const CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
-      const SECRET = process.env.PAYPAL_SECRET;
-      const auth = Buffer.from(`${CLIENT_ID}:${SECRET}`).toString('base64');
+    const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // Replace with live API in production
 
-      const tokenResponse = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
-          method: 'POST',
-          headers: {
-              Authorization: `Basic ${auth}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: 'grant_type=client_credentials',
-      });
+    const CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
+    const SECRET = process.env.PAYPAL_SECRET;
+    const auth = Buffer.from(`${CLIENT_ID}:${SECRET}`).toString('base64');
 
-      const tokenData = await tokenResponse.json();
-      // Verify the order with PayPal
-      const orderResponse = await fetch(`${PAYPAL_API}/v2/checkout/orders/${orderID}`, {
-          headers: {
-              Authorization: `Bearer ${tokenData.access_token}`,
-          },
-      });
+    const tokenResponse = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'grant_type=client_credentials',
+    });
 
-      const orderData = await orderResponse.json();
+    const tokenData = await tokenResponse.json();
+    // Verify the order with PayPal
+    const orderResponse = await fetch(`${PAYPAL_API}/v2/checkout/orders/${orderID}`, {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+      },
+    });
 
-      if (orderData.status === 'COMPLETED') {
-        /// Preparar los datos de la orden para Firestore
+    const orderData = await orderResponse.json();
+
+    if (orderData.status === 'COMPLETED') {
+      /// Preparar los datos de la orden para Firestore
       const purchaseDate = new Date().toISOString();
       const orderDetails = {
         orderId: orderID,
@@ -376,6 +460,117 @@ app.get('/api/read/orders/auth/:userID', isAuthenticated, async (req, res) => {
     res.status(500).json({ error: 'Error obteniendo las órdenes para el usuario' });
   }
 });
+
+app.get('/api/admin/logs', isAuthenticated, checkAdmin, async (req, res) => {
+  try {
+    const { limit: limitParam = 10, page = 1 } = req.query; // Default: 10 logs per page
+    const parsedLimit = parseInt(limitParam, 10);
+    const parsedPage = parseInt(page, 10);
+
+    if (parsedPage < 1 || parsedLimit < 1) {
+      return res.status(400).json({ error: 'Invalid page or limit parameter' });
+    }
+
+    const logsCol = collection(db, 'logs');
+
+    // Add an orderBy clause to ensure consistent results
+    const baseQuery = query(logsCol, orderBy('timestamp', 'desc'), limit(parsedLimit));
+
+    // Determine the starting point for pagination
+    let startAtSnapshot;
+    if (parsedPage > 1) {
+      const offsetQuery = query(logsCol, orderBy('timestamp', 'desc'), limit((parsedPage - 1) * parsedLimit));
+      const offsetSnapshot = await getDocs(offsetQuery);
+      const offsetDocs = offsetSnapshot.docs;
+
+      if (offsetDocs.length > 0) {
+        startAtSnapshot = offsetDocs[offsetDocs.length - 1];
+      }
+    }
+
+    // Fetch the logs with the pagination applied
+    const finalQuery = startAtSnapshot ? query(baseQuery, startAfter(startAtSnapshot)) : baseQuery;
+    const logsSnapshot = await getDocs(finalQuery);
+
+    const logs = logsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // Get total logs count
+    const totalSnapshot = await getDocs(logsCol);
+    const totalCount = totalSnapshot.size;
+    const totalPages = Math.ceil(totalCount / parsedLimit);
+
+    res.status(200).json({
+      logs,
+      metadata: {
+        currentPage: parsedPage,
+        totalPages,
+        totalCount,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching logs:', error);
+    res.status(500).json({ error: 'Error fetching logs' });
+  }
+});
+
+app.get('/api/admin/critical-logs', isAuthenticated, checkAdmin, async (req, res) => {
+  try {
+    const { limit: limitParam = 10, page = 1 } = req.query; 
+    const parsedLimit = parseInt(limitParam, 10);
+    const parsedPage = parseInt(page, 10);
+
+    if (parsedPage < 1 || parsedLimit < 1) {
+      return res.status(400).json({ error: 'Invalid page or limit parameter' });
+    }
+
+    const criticalLogsCol = collection(db, 'critical_logs');
+
+    // Add an orderBy clause to ensure consistent results
+    const baseQuery = query(criticalLogsCol, orderBy('timestamp', 'desc'), limit(parsedLimit));
+
+    // Determine the starting point for pagination
+    let startAtSnapshot;
+    if (parsedPage > 1) {
+      const offsetQuery = query(criticalLogsCol, orderBy('timestamp', 'desc'), limit((parsedPage - 1) * parsedLimit));
+      const offsetSnapshot = await getDocs(offsetQuery);
+      const offsetDocs = offsetSnapshot.docs;
+
+      if (offsetDocs.length > 0) {
+        startAtSnapshot = offsetDocs[offsetDocs.length - 1];
+      }
+    }
+
+    // Fetch the critical logs with the pagination applied
+    const finalQuery = startAtSnapshot ? query(baseQuery, startAfter(startAtSnapshot)) : baseQuery;
+    const criticalLogsSnapshot = await getDocs(finalQuery);
+
+    const criticalLogs = criticalLogsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // Get total critical logs count
+    const totalSnapshot = await getDocs(criticalLogsCol);
+    const totalCount = totalSnapshot.size;
+    const totalPages = Math.ceil(totalCount / parsedLimit);
+
+    res.status(200).json({
+      criticalLogs,
+      metadata: {
+        currentPage: parsedPage,
+        totalPages,
+        totalCount,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching critical logs:', error);
+    res.status(500).json({ error: 'Error fetching critical logs' });
+  }
+});
+
 
 // Configuración del servidor
 const PORT = process.env.PORT || 3000;

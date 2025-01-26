@@ -1,14 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import '../../styles/bookItem.css'
 import UploadImage from './uploadImage.jsx'
-import {transformImages } from '../../utils/urlUtils.jsx'
 
-const bookItem = ({ defaultImages, title, description, handleCallback }) => {
-
-    const imagesFormated = transformImages(defaultImages);
+const bookItem = ({ title, description, handleCallback  }) => {
     const [images, setImages] = useState();
-    
     const handleImageChanges = (images) => {
+        console.log("Images changed");
+        console.log(images);
         setImages(images);
     };   
 
@@ -24,7 +22,7 @@ const bookItem = ({ defaultImages, title, description, handleCallback }) => {
                 <p>{description}</p>
             </div>
             <div className="book-item-body">
-                <UploadImage defaultImages={imagesFormated} imagesCallback={handleImageChanges}/>
+                <UploadImage onBookUploaded={handleImageChanges}/>
             </div>
         </div>
     );

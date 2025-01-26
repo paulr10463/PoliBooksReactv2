@@ -9,7 +9,7 @@ const BookSlider = ({ book }) => {
 
     return (
         <div className="testimonial-item" data-aos="zoom-in" data-aos-duration="1000">
-            <img src={book.image.length > 0 ? book.image : urlImage} className="testimonial-img" alt="book for sale"></img>
+            <img src={book.image && book.image.length > 0 ? book.image : urlImage} className="testimonial-img" alt="book for sale"></img>
             <div className="testimonial-text">
                 <h1>{book.title}</h1>
                 <p>{book.description}</p>

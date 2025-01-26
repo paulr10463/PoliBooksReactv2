@@ -2,8 +2,7 @@ function transformImages(images) {
     if (!images) return [];
     const transformedImages = images.map(image => {
         return {
-            url: image,
-            name: getNameFromURL(image)
+            url: image
         }
     });
     return transformedImages;

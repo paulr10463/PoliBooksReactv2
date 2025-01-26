@@ -11,38 +11,11 @@ export default function ChatGroup() {
     const [socket, setSocket] = useState(null);
     const { authData } = useAuth(); // Removed setAuthorization since it's not used
      
-    useEffect(() => {
-        let messageObject; // Declare messageObject here
 
-        // Create a WebSocket connection
-        const ws = new WebSocket(environment.WS);
-    
-        ws.addEventListener('message', (event) => {
-            event.data.arrayBuffer().then((data) => {
-                const message = new TextDecoder('utf-8').decode(data);
-                messageObject = JSON.parse(message);
-                setMessages(prevMessages => [...prevMessages, messageObject]); // Update messages state correctly
-            });
-        });
-    
-    
-        ws.addEventListener('error', (event) => {
-            console.error('WebSocket error observed:', event);
-        });
-    
-        // Update the socket state after setting up listeners
-        setSocket(ws);
-    
-        // Clean up on component unmount
-        return () => {
-            ws.close();
-        };
-    }, [authData.name]); // Ensure useEffect runs when authData.name changes
 
     const handleSendMessage = () => {
         if (newMessage.trim() !== '') {
             if (socket && socket.readyState === WebSocket.OPEN) {
-                const message = new Message(newMessage, authData.name, Date.now());
                 socket.send(JSON.stringify(message));
                 setMessages(prevMessages => [...prevMessages, message]); // Update messages state correctly
                 setNewMessage(''); // Clear the input field after sending the message

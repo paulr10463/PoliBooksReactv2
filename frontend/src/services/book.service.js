@@ -55,7 +55,6 @@ export const deleteBooks = async (bookId, idToken) => {
             throw new Error(errorResponse || 'Unknown error occurred');
         }
     } catch (error) {
-        console.error("Error in deleteBooks:", error);
         throw new Error(error.message || 'Error processing your request'); // Rethrow to ensure it can be caught by caller
     }
 }

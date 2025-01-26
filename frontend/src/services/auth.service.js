@@ -10,3 +10,15 @@ export function isAuth(idToken) {
             },
         })
 }
+
+export function logout(idToken, userID) {
+    return fetch(`${environment.HOST}/logout`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `${idToken}`
+            },
+            body: JSON.stringify({ userID })
+        })
+}

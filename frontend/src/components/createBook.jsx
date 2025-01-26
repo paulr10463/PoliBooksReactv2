@@ -7,6 +7,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { errorToast, successToast, infoToast } from '../utils/toast.jsx';
 import { useAuth } from '../utils/authContext.jsx';
+import { postImage } from "../services/images.service.js";
 
 export default function CreateBook() {
   const { authData } = useAuth();
@@ -17,26 +18,75 @@ export default function CreateBook() {
     false, false, false, false, false, false, false, false
   ]);
   const [images, setImages] = useState([]);
+  const [imageUrls, setImageUrls] = useState([]);
 
   function handleCheckboxChange() {
     setCheckbox(!checkboxChecked);
-  }
+  };
+
+  const onPublishButtonClick = async () => {
+    try {
+      // Step 1: Validate and upload images
+      let uploadedImageUrls = [];
+      if (images && images.length > 0) {
+        const formData = new FormData();
+        images.forEach((image) => {
+          formData.append('files', image);
+        });
   
-  function onPublishButtonClick() {
+        try {
+          const response = await postImage(formData, authData.idToken);
+          uploadedImageUrls = response.uploadedFiles.map((file) => file.url);
+          setImageUrls((prev) => [...prev, ...uploadedImageUrls]);
+        } catch (error) {
+          errorToast('Error al subir las imágenes');
+          console.error('Image upload error:', error);
+          return;
+        }
+      } else {
+        errorToast('Debe seleccionar al menos una imagen');
+        return;
+      }
+
       const userID = authData.userID;
       const tokenID = authData.idToken;
       const title = document.getElementById('create-book-title').value;
       const description = document.getElementById('create-book-description').value;
       const brand = document.getElementById('create-book-brand').value;
       const level = document.getElementById('create-book-level').value;
-      const availability = parseInt(document.getElementById('create-book-availability').value);
+      const availability = parseInt(document.getElementById('create-book-availability').value, 10);
       const institution = document.getElementById('create-book-institution').value;
       const price = parseFloat(document.getElementById('create-book-price').value);
       const contact = document.getElementById('create-book-contact').value;
-      // Guardar el libro en la base de datos 
-      const save = saveBook(userID, tokenID, title, description, brand, level, availability, images, institution, price, contact);
-      setIsSaved(save);
+  
+      const bookPayload = {
+        userID,
+        title,
+        description,
+        brand,
+        level,
+        availability,
+        image: uploadedImageUrls, // Include uploaded image URLs
+        institution,
+        price,
+        contact,
+      };
+      console.log(bookPayload);
+      try {
+        await saveBook(bookPayload, tokenID); // Save the book
+        successToast('Libro guardado exitosamente');
+
+      } catch (error) {
+        // Improved error message
+        errorToast(`Error al guardar el libro: ${error.message}`);
+        console.error('Book save error:', error);
+      }
+    } catch (error) {
+      errorToast('Ha ocurrido un error inesperado');
+      console.error('Unexpected error:', error);
+    }
   };
+  
 
   useEffect(() => {
     const formIsValid = inputValidities.reduce((acc, curr) => acc && curr, true);
@@ -67,6 +117,8 @@ export default function CreateBook() {
   };
 
   const updateImagesURLs = (images) => {
+    console.log("Images changed in parent 2");
+    console.log(images);
     setImages(images); 
   };
 
@@ -138,7 +190,6 @@ export default function CreateBook() {
           handleCallback={updateInputValidity}
           id="create-book-contact"
         />
-
       </div>
       <label className="checkbox-container">
         <input type="checkbox" id="accept-checkbox" onChange={handleCheckboxChange}></input>

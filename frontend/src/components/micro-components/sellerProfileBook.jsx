@@ -27,9 +27,14 @@ const SellerBookItem = ({ book }) => {
         .then((result) => {
             if (result.isConfirmed) {
                 setIsLoading(true);
-                deleteBooks(book.id, 13123)
+                deleteBooks(book.id, authData.idToken)
                     .then(() => {
-                        Swal.fire('¡Hecho!', 'La acción se ha completado.', 'success');
+                        Swal.fire(
+                            '¡Hecho!', 
+                            'La acción se ha completado.', 
+                            'success').then(() => {
+                                window.location.reload();
+                            });
                     })
                     .catch((error) => {
                         console.error("Error in Seller Profile:", error);
@@ -46,7 +51,7 @@ const SellerBookItem = ({ book }) => {
             <div className="portfolio-wrap">
                 <button className="btn-edit" data-book-id="1" onClick={handleEdit}><FontAwesomeIcon icon={faPenToSquare} /></button>
                 <button className="btn-delete" data-book-id="1" onClick={handleDelete}><FontAwesomeIcon icon={faTrash} /></button>  
-                <img src={book.image.length > 0? book.image: urlImage} className="img-fluid" alt="Portada del libro"></img>
+                <img src={book.image && book.image.length > 0? book.image: urlImage} className="img-fluid" alt="Portada del libro"></img>
                 <div className="portfolio-info">
                     <h4>{book.title}</h4>
                     <p>{book.level}</p>
