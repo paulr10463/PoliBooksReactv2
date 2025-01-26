@@ -15,7 +15,8 @@ const { getStorage, ref, uploadBytesResumable, getDownloadURL } = require("fireb
 const { isAuthenticated, encryptToken, removeRefreshToken } = require('../firebaseAuthentication');
 const firebaseConfig = require('../firebaseConfig');
 require('dotenv').config();
-
+const { fileTypeFromBuffer } = require('file-type');
+const {sanitizeInput, validateUID } = require('../utils/sanitizeUtils');
 // Inicialización de Firebase
 const appFirebase = initializeApp(firebaseConfig);
 const auth = getAuth(appFirebase);
@@ -27,22 +28,49 @@ const upload = multer({ storage: storage });
 // Creación de una instancia en Express
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://poli-books-react.vercel.app',
+      'http://localhost:5173',
+    ];
+    if (allowedOrigins.includes(origin) || !origin) {
+      // Permitir el origen
+      callback(null, true);
+    } else {
+      callback(new Error('Origen no permitido por CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos HTTP permitidos
+  allowedHeaders: ['Content-Type', 'Authorization'], // Encabezados permitidos
+  credentials: true, // Permitir cookies/credenciales
+};
+
+app.use(cors(corsOptions));
 
 const checkAdmin = async (req, res, next) => {
   try {
-    const userId = req.user.uid;
+    // Validar y sanitizar el UID
+    if (!req.user || !req.user.uid) {
+      return res.status(400).json({ error: 'Usuario no autenticado' });
+    }
+
+    const userId = validateUID(req.user.uid);
+
     // Buscar usuario en Firestore
     const usersCol = collection(db, 'users');
-    const userQuery = query(usersCol, where('uid', '==', userId));
+    const userQuery = query(usersCol, where('uid', '==', sanitizeInput(userId)));
     const querySnapshot = await getDocs(userQuery);
 
+    // Verificar si el usuario existe
     if (querySnapshot.empty) {
       return res.status(403).json({ error: 'Usuario no encontrado o no autorizado' });
     }
 
-    const userData = querySnapshot.docs[0].data();
+    const userData = sanitizeInput(querySnapshot.docs[0].data());
 
+    // Validar rol del usuario
     if (userData.role !== 'admin') {
       return res.status(403).json({ error: 'Acceso denegado: no eres administrador' });
     }
@@ -50,7 +78,9 @@ const checkAdmin = async (req, res, next) => {
     next(); // Usuario es administrador, continuar con la solicitud
   } catch (error) {
     console.error('Error al verificar rol de administrador:', error.message);
-    res.status(500).json({ error: 'Error al verificar el rol de administrador' });
+
+    // Respuesta genérica para no filtrar información
+    res.status(500).json({ error: 'Error interno al verificar la autorización' });
   }
 };
 
@@ -99,20 +129,32 @@ app.use(logRequests);
 // Ruta básica de prueba
 app.get('/api', (req, res) => {
   const path = `/api/item/${require('uuid').v4()}`;
-  res.setHeader('Content-Type', 'text/html');
   res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
   res.send(`Hello! Go to item: <a href="${path}">${path}</a>`);
 });
 
 app.post('/api/upload', isAuthenticated, upload.array('files', 5), async (req, res) => {
   try {
-    const files = req.files; // `req.files` contiene todos los archivos subidos
+    const files = req.files; // `req.files` contains all uploaded files
 
     if (!files || files.length === 0) {
-      return res.status(400).send('No se han proporcionado archivos.');
+      return res.status(400).send('No files were provided.');
     }
 
-    // Procesar y subir cada archivo a Firebase Storage
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const invalidFiles = files.filter((file) => !allowedMimeTypes.includes(file.mimetype));
+
+    if (invalidFiles.length > 0) {
+      return res.status(400).send({
+        error: 'Invalid file type(s) detected.',
+        details: invalidFiles.map((file) => ({
+          name: file.originalname,
+          type: file.mimetype,
+        })),
+      });
+    }
+
+    // Process and upload each file to Firebase Storage
     const uploadPromises = files.map(async (file) => {
       const storageRef = ref(firebaseStorage, `/files/${file.originalname}`);
       const uploadTask = await uploadBytesResumable(storageRef, file.buffer);
@@ -120,14 +162,14 @@ app.post('/api/upload', isAuthenticated, upload.array('files', 5), async (req, r
       return { originalName: file.originalname, url: downloadURL };
     });
 
-    // Esperar a que todos los archivos se suban
+    // Wait for all files to upload
     const uploadedFiles = await Promise.all(uploadPromises);
 
-    // Responder con las URLs de los archivos subidos
+    // Respond with the uploaded file URLs
     res.status(200).send({ uploadedFiles });
   } catch (error) {
-    console.error('Error al subir archivos:', error);
-    res.status(500).send('Error al subir los archivos.');
+    console.error('Error uploading files:', error);
+    res.status(500).send('Error uploading files.');
   }
 });
 
@@ -147,249 +189,498 @@ app.get('/api/read/books', async (req, res) => {
 
 
 
-// Obtener un libro por su ID
 app.get('/api/read/book/:bookId', async (req, res) => {
   try {
-    const bookId = req.params.bookId
+    // Validar y sanitizar el ID del libro
+    const bookId = req.params.bookId.trim();
 
-    // Capturamos cada libro por la ida
-    const bookRef = doc(db, 'books', bookId)
-    const bookDoc = await getDoc(bookRef)
+    // Validar formato del ID (por ejemplo, alfanumérico de 20-30 caracteres)
+    if (!validateUID(bookId)) {
+      return res.status(400).json({ error: 'El ID del libro es inválido' });
+    }
+
+    // Referencia al libro en Firestore
+    const bookRef = doc(db, 'books', bookId);
+    const bookDoc = await getDoc(bookRef);
 
     if (bookDoc.exists()) {
-      // Si el libro existe, devolverlo como respuesta
+      // Sanitizar los datos del libro antes de enviarlos al cliente
       const bookData = {
         id: bookDoc.id,
-        ...bookDoc.data()
-      }
-      res.status(200).json(bookData)
+        ...sanitizeInput(bookDoc.data()), // Sanitización de datos
+      };
+      res.status(200).json(bookData);
     } else {
-      // Si el libro no existe, responder con un código de estado 404 (No encontrado)
-      res.status(404).json({ error: 'El libro no existe' })
+      // Si el libro no existe, responder con 404
+      res.status(404).json({ error: 'El libro no existe' });
     }
   } catch (error) {
-    // No se pudo obtener el libro por su ID
-    console.error('Error getting the book by ID', error)
-    res.status(500).json({ error: 'Error getting the book by ID' })
+    // Manejo de errores seguro
+    console.error('Error al obtener el libro por ID:', error.message);
+    res.status(500).json({ error: 'No se pudo obtener el libro' });
   }
-})
+});
 
 app.get('/api/read/books/:limit', async (req, res) => {
   try {
-    const limitParam = parseInt(req.params.limit, 10) || 5 // Obtener el límite de la URL, o utilizar 5 como valor predeterminado si no se proporciona.
-    const booksCol = collection(db, 'books')
-    const querySnapshot = await getDocs(query(booksCol, limit(limitParam)))
-    const booksList = []
+    // Validar y sanitizar el parámetro `limit`
+    let limitParam = sanitizeInput(req.params.limit);
+
+    // Convertir a número y establecer límites
+    limitParam = parseInt(limitParam, 10);
+    if (isNaN(limitParam) || limitParam <= 0) {
+      limitParam = 5; // Valor predeterminado
+    }
+    if (limitParam > 100) {
+      limitParam = 100; // Límite máximo
+    }
+
+    // Obtener la colección de libros con el límite especificado
+    const booksCol = collection(db, 'books');
+    const querySnapshot = await getDocs(query(booksCol, limit(limitParam)));
+
+    // Construir la lista de libros sanitizados
+    const booksList = [];
     querySnapshot.forEach((doc) => {
       booksList.push({
-        id: doc.id,
-        ...doc.data()
-      })
-    })
-    res.status(200).json(booksList)
+        id: sanitizeInput(doc.id), // Sanitizar el ID del libro
+        ...sanitizeInput(doc.data()), // Sanitizar los datos del libro
+      });
+    });
 
+    // Enviar la lista de libros al cliente
+    res.status(200).json(booksList);
   } catch (error) {
-    // No se pudo obtener la lista de libros
-    console.error('Error getting the books list', error)
-    res.status(500).json({ error: 'Error getting the books list' })
+    // Manejo de errores seguro
+    console.error('Error al obtener la lista de libros:', error.message);
+    res.status(500).json({ error: 'No se pudo obtener la lista de libros' });
   }
-})
+});
 
-// Ruta para buscar libros por título o parte del título
 app.get('/api/search/books', async (req, res) => {
   try {
-    const searchText = req.query.title.toLowerCase() // Convertir la consulta a minúsculas
+    // Validar y sanitizar el parámetro "title"
+    const { title } = req.query;
 
-    // Realizar la búsqueda en la base de datos de Firebase
-    const booksRef = collection(db, 'books')
-    const querySnapshot = await getDocs(booksRef)
+    if (!title) {
+      return res.status(400).json({ error: 'El parámetro "title" es requerido' });
+    }
 
-    const matchingBooks = []
+    const searchText = sanitizeInput(title).toLowerCase().trim();
+
+    if (searchText.length < 3) {
+      return res.status(400).json({ error: 'El parámetro "title" debe tener al menos 3 caracteres' });
+    }
+
+    // Obtener todos los libros de Firebase
+    const booksRef = collection(db, 'books');
+    const querySnapshot = await getDocs(booksRef);
+
+    // Buscar coincidencias sanitizando los títulos en la base de datos
+    const matchingBooks = [];
     querySnapshot.forEach((doc) => {
-      const title = doc.data().title.toLowerCase() // Convertir el título de la base de datos a minúsculas
-      if (title.includes(searchText)) {
-        // Agregar los libros coincidentes a la lista
-        matchingBooks.push({ id: doc.id, ...doc.data() })
-      }
-    })
+      const bookData = sanitizeInput(doc.data());
+      const bookTitle = bookData.title?.toLowerCase() || '';
 
-    res.status(200).json(matchingBooks)
+      if (bookTitle.includes(searchText)) {
+        matchingBooks.push({ id: doc.id, ...bookData });
+      }
+    });
+
+    // Enviar respuesta
+    if (matchingBooks.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron libros con el título proporcionado.' });
+    }
+
+    return res.status(200).json(matchingBooks);
   } catch (error) {
-    // No se pudo buscar libros
-    console.error('Error al buscar libros:', error)
-    res.status(500).json({ error: 'Hubo un error al buscar libros', errorFire: error })
+    console.error('Error al buscar libros:', error);
+    return res.status(500).json({ error: 'Hubo un error al buscar libros' });
   }
-})
+});
+
 
 // Ruta protegida que requiere autenticación
 app.get('/api/isAuth', isAuthenticated, (req, res) => {
   res.status(200);
 })
-
 app.get('/api/read/book/auth/:userID', isAuthenticated, async (req, res) => {
   try {
-    const userID = req.params.userID
-    const booksCol = collection(db, 'books')
-    const querySnapshot = await getDocs(query(booksCol, where('userID', '==', userID)))
-    const booksList = []
+    // Validar y sanitizar el userID
+    const userID = req.params.userID;
+    try {
+      validateUID(userID); // Validar formato de userID
+    } catch (error) {
+      return res.status(400).json({ error: 'userID inválido: ' + error.message });
+    }
+
+    // Consultar libros en la colección con el userID validado
+    const booksCol = collection(db, 'books');
+    const querySnapshot = await getDocs(query(booksCol, where('userID', '==', userID)));
+
+    // Crear lista de libros sanitizando los datos
+    const booksList = [];
     querySnapshot.forEach((doc) => {
+      const sanitizedData = sanitizeInput(doc.data());
       booksList.push({
         id: doc.id,
-        ...doc.data()
-      })
-    })
+        ...sanitizedData,
+      });
+    });
 
-    res.status(200).json(booksList)
+    // Responder con los libros encontrados
+    return res.status(200).json(booksList);
   } catch (error) {
-    // No se pudo obtener la lista de libros para el usuario
-    console.error('Error getting the books list for user', error)
-    res.status(500).json({ error: 'Error getting the books list for user' })
-  }
-})
-
-// Ruta para el endpoint de registro de usuario
-app.post('/api/register', async (req, res) => {
-  const { email, password, phone, name } = req.body
-  try {
-    // Crear usuario con correo y contraseña en Firebase Authentication
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-    const uid = userCredential.user.uid
-    // Guardar información adicional en Firestore
-    await addDoc(collection(db, 'users'), {
-      uid: uid,
-      phone: phone,
-      name: name
-    })
-
-    res.status(200).json({ message: 'Registro exitoso' })
-  } catch (error) {
-    // No se pudo registrar el usuario
-    console.error('Error al registrarse:', error.message)
-    // Manejar errores y enviar una respuesta de error
-    res.status(500).json({ error: error.message })
-  }
-})
-
-// Ruta para el endpoint de inicio de sesión
-app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body
-  try {
-    // Iniciar sesión con correo y contraseña
-    const userCredential = await signInWithEmailAndPassword(auth, email, password)
-    const user = userCredential.user
-    res.status(200).json({ isAuthorized: true, userID: user.uid, idToken: encryptToken(await auth.currentUser.getIdToken()) })
-
-  } catch (error) {
-    console.error('Error al iniciar sesión:', error.message);
-    // Registrar intentos fallidos
-    if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-email') {
-      await logCriticalEvent(
-        'LOGIN_FAILURE',
-        `Intento fallido de inicio de sesión para el correo ${email}`,
-        { email, errorCode: error.code }
-      );
-    }
-    // Manejar errores y enviar una respuesta de error
-    res.status(500).json({ error: error.message })
-  }
-})
-
-app.post('/api/logout', isAuthenticated, async (req, res) => {
-  try {
-    const userID = req.body.userID;
-    await removeRefreshToken(userID);
-
-    console.log("User successfully logged out");
-    res.status(200).json({ message: "User successfully logged out" });
-  } catch (error) {
-    console.error("Error during logout:", error.message);
-    res.status(500).json({ error: "Logout failed" });
+    // Manejo de errores
+    console.error('Error al obtener la lista de libros para el usuario:', error);
+    return res.status(500).json({ error: 'Error al obtener la lista de libros para el usuario' });
   }
 });
 
-// Ruta para envio de correo de recuperacion de contraseña
-app.post('/api/user/reset-password', async (req, res) => {
-  const { email } = req.body
-  try {
-    const resetPassword = await sendPasswordResetEmail(auth, email)
-    res.status(200).json({ message: "Correo enviado exitosamete" })
-  } catch (error) {
-    // No se pudo enviar el correo de restablecimiento de contraseña
-    console.error('Error al enviar el correo de restablecimiento de contraseña:', error)
-    // Manejar errores y enviar una respuesta de error
-    res.status(500).json({ error: error.message })
-  }
-})
 
-// Ruta para borrado de un libro
-app.delete('/api/delete/book/:bookId', isAuthenticated, async (req, res) => {
+app.post('/api/register', async (req, res) => {
   try {
-    const bookId = req.params.bookId
-    // Verifica si el libro existe antes de eliminarlo
-    const bookRef = doc(db, 'books', bookId)
-    const bookDoc = await getDoc(bookRef)
+    // Sanitizar y validar los datos de entrada
+    const sanitizedBody = sanitizeInput(req.body);
+    const { email, password, phone, name } = sanitizedBody;
 
-    if (!bookDoc.exists()) {
-      return res.status(404).json({ error: 'El libro no existe' })
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Correo electrónico inválido' });
     }
 
-    // Elimina el libro
-    await deleteDoc(bookRef)
-    res.status(200).json({ message: 'Libro eliminado exitosamente' })
-  } catch (error) {
-    // No se pudo eliminar el libro
-    console.error('Error al eliminar el libro:', error);
-    await logCriticalEvent('DATABASE_ERROR', 'Error al eliminar un libro', { bookId, error: error.message });
-    res.status(500).json({ error: 'Hubo un error al eliminar el libro', errorFire: error })
-  }
-})
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    }
 
-//Crear un libro
+    if (!phone || !/^\d{10,15}$/.test(phone)) {
+      return res.status(400).json({ error: 'Número de teléfono inválido. Debe contener entre 10 y 15 dígitos' });
+    }
+
+    if (!name || typeof name !== 'string' || name.trim().length < 3) {
+      return res.status(400).json({ error: 'El nombre debe tener al menos 3 caracteres' });
+    }
+
+    // Crear usuario con correo y contraseña en Firebase Authentication
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = userCredential.user.uid;
+
+    // Validar y sanitizar el UID generado
+    try {
+      validateUID(uid);
+    } catch (validationError) {
+      return res.status(500).json({ error: 'UID generado inválido: ' + validationError.message });
+    }
+
+    // Guardar información adicional en Firestore
+    await addDoc(collection(db, 'users'), {
+      uid: uid,
+      phone: sanitizeInput(phone),
+      name: sanitizeInput(name),
+      email: sanitizeInput(email),
+    });
+
+    // Respuesta exitosa
+    return res.status(200).json({ message: 'Registro exitoso' });
+  } catch (error) {
+    // Manejo de errores
+    console.error('Error al registrarse:', error.message);
+    return res.status(500).json({ error: 'No se pudo completar el registro: ' + error.message });
+  }
+});
+
+
+// Ruta para el endpoint de inicio de sesión
+app.post('/api/login', async (req, res) => {
+  try {
+    // Sanitizar y validar los datos de entrada
+    const sanitizedBody = sanitizeInput(req.body);
+    const { email, password } = sanitizedBody;
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Correo electrónico inválido' });
+    }
+
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    }
+
+    // Iniciar sesión con correo y contraseña
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Generar y encriptar el token de usuario
+    const idToken = await auth.currentUser.getIdToken();
+    const encryptedToken = encryptToken(idToken);
+
+    return res.status(200).json({ 
+      isAuthorized: true, 
+      userID: user.uid, 
+      idToken: encryptedToken 
+    });
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error.message);
+
+    // Registrar intentos fallidos en caso de credenciales incorrectas
+    if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-email') {
+      await logCriticalEvent(
+        'LOGIN_FAILURE',
+        `Intento fallido de inicio de sesión para el correo ${sanitizeInput(req.body.email)}`,
+        { email: sanitizeInput(req.body.email), errorCode: error.code }
+      );
+    }
+
+    // Manejar errores y enviar una respuesta descriptiva
+    if (error.code === 'auth/wrong-password') {
+      return res.status(401).json({ error: 'Contraseña incorrecta' });
+    } else if (error.code === 'auth/user-not-found') {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    } else if (error.code === 'auth/invalid-email') {
+      return res.status(400).json({ error: 'Correo electrónico inválido' });
+    }
+
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+
+app.post('/api/logout', isAuthenticated, async (req, res) => {
+  try {
+    // Validar y sanitizar el userID
+    const sanitizedBody = sanitizeInput(req.body);
+    const { userID } = sanitizedBody;
+
+    if (!userID) {
+      return res.status(400).json({ error: 'El userID es requerido' });
+    }
+
+    try {
+      validateUID(userID); // Validar el formato del userID
+    } catch (error) {
+      return res.status(400).json({ error: `userID inválido: ${error.message}` });
+    }
+
+    // Eliminar el token de actualización del usuario
+    await removeRefreshToken(userID);
+
+    console.log("Usuario cerrado sesión con éxito");
+    return res.status(200).json({ message: "Usuario cerrado sesión con éxito" });
+  } catch (error) {
+    console.error("Error durante el cierre de sesión:", error.message);
+    return res.status(500).json({ error: "Error al cerrar sesión" });
+  }
+});
+
+
+app.post('/api/user/reset-password', async (req, res) => {
+  try {
+    // Sanitizar y validar el correo electrónico
+    const sanitizedBody = sanitizeInput(req.body);
+    const { email } = sanitizedBody;
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Correo electrónico inválido' });
+    }
+
+    // Enviar correo de recuperación de contraseña
+    await sendPasswordResetEmail(auth, email);
+
+    console.log('Correo de recuperación enviado exitosamente a:', email);
+    return res.status(200).json({ message: 'Correo enviado exitosamente' });
+  } catch (error) {
+    console.error('Error al enviar el correo de restablecimiento de contraseña:', error);
+
+    // Manejo específico de errores comunes
+    if (error.code === 'auth/user-not-found') {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    } else if (error.code === 'auth/invalid-email') {
+      return res.status(400).json({ error: 'Correo electrónico inválido' });
+    }
+
+    // Manejo de errores genéricos
+    return res.status(500).json({ error: 'Error al enviar el correo de restablecimiento de contraseña' });
+  }
+});
+
+app.delete('/api/delete/book/:bookId', isAuthenticated, async (req, res) => {
+  try {
+    // Validar y sanitizar el ID del libro
+    const bookId = sanitizeInput(req.params.bookId);
+
+    if (!bookId || typeof bookId !== 'string' || bookId.trim().length === 0) {
+      return res.status(400).json({ error: 'ID del libro inválido' });
+    }
+
+    // Verificar si el libro existe antes de eliminarlo
+    const bookRef = doc(db, 'books', bookId);
+    const bookDoc = await getDoc(bookRef);
+
+    if (!bookDoc.exists()) {
+      return res.status(404).json({ error: 'El libro no existe' });
+    }
+
+    // Eliminar el libro
+    await deleteDoc(bookRef);
+
+    console.log('Libro eliminado exitosamente:', bookId);
+    return res.status(200).json({ message: 'Libro eliminado exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar el libro:', error.message);
+
+    // Registrar eventos críticos en caso de error
+    await logCriticalEvent('DATABASE_ERROR', 'Error al eliminar un libro', {
+      bookId: req.params.bookId,
+      error: error.message,
+    });
+
+    // Responder con un mensaje genérico de error
+    return res.status(500).json({ error: 'Hubo un error al eliminar el libro' });
+  }
+});
+
+
 app.post('/api/create/book', isAuthenticated, async (req, res) => {
   try {
-    const bookData = req.body
-    const newBookRef = await addDoc(collection(db, 'books'), bookData)
-    res.status(201).json({ message: 'Libro creado exitosamente', bookId: newBookRef.id })
+    // Sanitizar y validar los datos del libro
+    const sanitizedBookData = sanitizeInput(req.body);
+    const { title, author, genre, publishedYear } = sanitizedBookData;
+
+    if (!title || typeof title !== 'string' || title.trim().length < 3) {
+      return res.status(400).json({ error: 'El título es requerido y debe tener al menos 3 caracteres' });
+    }
+
+    if (!author || typeof author !== 'string' || author.trim().length < 3) {
+      return res.status(400).json({ error: 'El autor es requerido y debe tener al menos 3 caracteres' });
+    }
+
+    if (!genre || typeof genre !== 'string' || genre.trim().length === 0) {
+      return res.status(400).json({ error: 'El género es requerido' });
+    }
+
+    if (!publishedYear || typeof publishedYear !== 'number' || publishedYear < 1000 || publishedYear > new Date().getFullYear()) {
+      return res.status(400).json({ error: 'El año de publicación es inválido' });
+    }
+
+    // Crear el libro en la base de datos
+    const newBookRef = await addDoc(collection(db, 'books'), {
+      title: title.trim(),
+      author: author.trim(),
+      genre: genre.trim(),
+      publishedYear,
+      createdAt: new Date().toISOString(),
+    });
+
+    console.log('Libro creado exitosamente:', newBookRef.id);
+    return res.status(201).json({ message: 'Libro creado exitosamente', bookId: newBookRef.id });
   } catch (error) {
-    // No se pudo crear el libro
-    console.error('Error al crear el libro:', error)
-    res.status(500).json({ error: 'Hubo un error al crear el libro', errorFire: error })
+    console.error('Error al crear el libro:', error);
+
+    // Registrar evento crítico en caso de error
+    await logCriticalEvent('DATABASE_ERROR', 'Error al crear un libro', {
+      bookData: req.body,
+      error: error.message,
+    });
+
+    return res.status(500).json({ error: 'Hubo un error al crear el libro' });
   }
-})
+});
+
 
 // Ruta para actualizar un libro
 app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
   try {
-    const bookId = req.params.bookId
-    const updatedData = req.body // Los datos actualizados del libro deben estar en el cuerpo de la solicitud
+    // Validar y sanitizar el ID del libro
+    const bookId = sanitizeInput(req.params.bookId);
 
-    // Verifica si el libro existe antes de actualizarlo
-    const bookRef = doc(db, 'books', bookId)
-    const bookDoc = await getDoc(bookRef)
+    if (!bookId || typeof bookId !== 'string' || bookId.trim().length === 0) {
+      return res.status(400).json({ error: 'ID del libro inválido' });
+    }
+
+    // Sanitizar y validar los datos del cuerpo de la solicitud
+    const sanitizedData = sanitizeInput(req.body);
+    const { title, author, genre, publishedYear } = sanitizedData;
+
+    if (title && (typeof title !== 'string' || title.trim().length < 3)) {
+      return res.status(400).json({ error: 'El título debe tener al menos 3 caracteres' });
+    }
+
+    if (author && (typeof author !== 'string' || author.trim().length < 3)) {
+      return res.status(400).json({ error: 'El autor debe tener al menos 3 caracteres' });
+    }
+
+    if (genre && (typeof genre !== 'string' || genre.trim().length === 0)) {
+      return res.status(400).json({ error: 'El género no puede estar vacío' });
+    }
+
+    if (
+      publishedYear &&
+      (typeof publishedYear !== 'number' || publishedYear < 1000 || publishedYear > new Date().getFullYear())
+    ) {
+      return res.status(400).json({ error: 'El año de publicación es inválido' });
+    }
+
+    // Verificar si el libro existe
+    const bookRef = doc(db, 'books', bookId);
+    const bookDoc = await getDoc(bookRef);
 
     if (!bookDoc.exists()) {
-      return res.status(404).json({ error: 'El libro no existe' })
+      return res.status(404).json({ error: 'El libro no existe' });
     }
-    // Actualiza los datos del libro en la base de datos
-    await updateDoc(bookRef, updatedData)
-    res.status(200).json({ message: 'Libro actualizado exitosamente' })
+
+    // Actualizar los datos del libro
+    await updateDoc(bookRef, {
+      ...(title && { title: title.trim() }),
+      ...(author && { author: author.trim() }),
+      ...(genre && { genre: genre.trim() }),
+      ...(publishedYear && { publishedYear }),
+      updatedAt: new Date().toISOString(),
+    });
+
+    console.log('Libro actualizado exitosamente:', bookId);
+    return res.status(200).json({ message: 'Libro actualizado exitosamente' });
   } catch (error) {
-    // No se pudo actualizar el libro
-    console.error('Error al actualizar el libro:', error)
-    res.status(500).json({ error: 'Hubo un error al actualizar el libro', errorFire: error })
+    console.error('Error al actualizar el libro:', error);
+
+    // Registrar evento crítico en caso de error
+    await logCriticalEvent('DATABASE_ERROR', 'Error al actualizar un libro', {
+      bookId: req.params.bookId,
+      error: error.message,
+    });
+
+    return res.status(500).json({ error: 'Hubo un error al actualizar el libro' });
   }
-})
+});
+
 
 app.post('/api/payment/confirm', isAuthenticated, async (req, res) => {
-  const { orderID, bookId, userId } = req.body;
-
   try {
-    const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // Replace with live API in production
+    // Sanitizar y validar los datos de entrada
+    const sanitizedBody = sanitizeInput(req.body);
+    const { orderID, bookId, userId } = sanitizedBody;
 
+    if (!orderID || typeof orderID !== 'string') {
+      return res.status(400).json({ error: 'ID de la orden es requerido y debe ser una cadena válida' });
+    }
+
+    if (!bookId || typeof bookId !== 'string') {
+      return res.status(400).json({ error: 'ID del libro es requerido y debe ser una cadena válida' });
+    }
+
+    if (!userId || typeof userId !== 'string') {
+      return res.status(400).json({ error: 'ID del usuario es requerido y debe ser una cadena válida' });
+    }
+
+    // Configuración de la API de PayPal
+    const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // Cambia a la API de producción en despliegues reales
     const CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
     const SECRET = process.env.PAYPAL_SECRET;
+
+    if (!CLIENT_ID || !SECRET) {
+      return res.status(500).json({ error: 'Credenciales de PayPal no configuradas' });
+    }
+
     const auth = Buffer.from(`${CLIENT_ID}:${SECRET}`).toString('base64');
 
+    // Obtener el token de acceso de PayPal
     const tokenResponse = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
       method: 'POST',
       headers: {
@@ -400,7 +691,12 @@ app.post('/api/payment/confirm', isAuthenticated, async (req, res) => {
     });
 
     const tokenData = await tokenResponse.json();
-    // Verify the order with PayPal
+
+    if (!tokenResponse.ok) {
+      return res.status(500).json({ error: 'No se pudo obtener el token de acceso de PayPal', details: tokenData });
+    }
+
+    // Verificar la orden con PayPal
     const orderResponse = await fetch(`${PAYPAL_API}/v2/checkout/orders/${orderID}`, {
       headers: {
         Authorization: `Bearer ${tokenData.access_token}`,
@@ -409,75 +705,111 @@ app.post('/api/payment/confirm', isAuthenticated, async (req, res) => {
 
     const orderData = await orderResponse.json();
 
-    if (orderData.status === 'COMPLETED') {
-      /// Preparar los datos de la orden para Firestore
-      const purchaseDate = new Date().toISOString();
-      const orderDetails = {
-        orderId: orderID,
-        userId: userId,
-        bookId: bookId,
-        amount: orderData.purchase_units[0].amount.value,
-        currency: orderData.purchase_units[0].amount.currency_code,
-        status: orderData.status,
-        payer: {
-          name: `${orderData.payer.name.given_name} ${orderData.payer.name.surname}`,
-          email: orderData.payer.email_address,
-        },
-        purchaseDate,
-      };
-
-      // Guardar la orden en Firestore
-      const newOrderRef = await addDoc(collection(db, 'orders'), orderDetails);
-
-      res.status(201).json({ success: true, message: 'Pago confirmado y orden guardada exitosamente', orderId: newOrderRef.id });
-    } else {
-      res.status(400).json({ error: 'Orden no completada' });
+    if (!orderResponse.ok || !orderData || orderData.status !== 'COMPLETED') {
+      return res.status(400).json({ error: 'La orden no está completada o es inválida', details: orderData });
     }
+
+    // Preparar los datos de la orden para Firestore
+    const purchaseDate = new Date().toISOString();
+    const orderDetails = {
+      orderId: orderID,
+      userId: userId,
+      bookId: bookId,
+      amount: orderData.purchase_units[0].amount.value,
+      currency: orderData.purchase_units[0].amount.currency_code,
+      status: orderData.status,
+      payer: {
+        name: `${orderData.payer.name.given_name} ${orderData.payer.name.surname}`,
+        email: orderData.payer.email_address,
+      },
+      purchaseDate,
+    };
+
+    // Guardar la orden en Firestore
+    const newOrderRef = await addDoc(collection(db, 'orders'), orderDetails);
+
+    console.log('Pago confirmado y orden guardada exitosamente:', newOrderRef.id);
+    return res.status(201).json({
+      success: true,
+      message: 'Pago confirmado y orden guardada exitosamente',
+      orderId: newOrderRef.id,
+    });
   } catch (error) {
     console.error('Error al confirmar la orden con PayPal:', error);
-    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+    return res.status(500).json({
+      error: 'Error interno del servidor',
+      details: error.message,
+    });
   }
 });
+
 
 app.get('/api/read/orders/auth/:userID', isAuthenticated, async (req, res) => {
   try {
-    const userID = req.params.userID; // Obtener el ID del usuario de los parámetros de la URL
+    // Validar y sanitizar el ID del usuario
+    const userID = sanitizeInput(req.params.userID);
 
-    const ordersCol = collection(db, 'orders'); // Referencia a la colección 'orders'
-    const querySnapshot = await getDocs(query(ordersCol, where('userId', '==', userID))); // Filtrar órdenes por 'userID'
+    if (!userID || typeof userID !== 'string' || userID.trim().length === 0) {
+      return res.status(400).json({ error: 'ID del usuario inválido' });
+    }
 
+    // Referencia a la colección 'orders' y consulta filtrada por 'userId'
+    const ordersCol = collection(db, 'orders');
+    const querySnapshot = await getDocs(query(ordersCol, where('userId', '==', userID)));
+
+    // Construir la lista de órdenes
     const ordersList = [];
     querySnapshot.forEach((doc) => {
+      const sanitizedOrder = sanitizeInput(doc.data());
       ordersList.push({
         id: doc.id, // Incluir el ID del documento
-        ...doc.data(), // Agregar los datos del documento
+        ...sanitizedOrder, // Agregar los datos sanitizados del documento
       });
     });
 
-    res.status(200).json(ordersList); // Responder con la lista de órdenes
+    // Verificar si no hay órdenes
+    if (ordersList.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron órdenes para el usuario especificado' });
+    }
+
+    return res.status(200).json(ordersList); // Responder con la lista de órdenes
   } catch (error) {
-    console.error('Error obteniendo las órdenes para el usuario', error);
-    res.status(500).json({ error: 'Error obteniendo las órdenes para el usuario' });
+    console.error('Error obteniendo las órdenes para el usuario:', error);
+
+    // Manejo de errores con registro detallado
+    await logCriticalEvent('DATABASE_ERROR', 'Error al leer órdenes', {
+      userId: req.params.userID,
+      error: error.message,
+    });
+
+    return res.status(500).json({ error: 'Error obteniendo las órdenes para el usuario' });
   }
 });
 
+
 app.get('/api/admin/logs', isAuthenticated, checkAdmin, async (req, res) => {
   try {
-    const { limit: limitParam = 10, page = 1 } = req.query; // Default: 10 logs per page
+    // Validar y sanitizar los parámetros de consulta
+    const { limit: limitParam = 10, page = 1 } = sanitizeInput(req.query);
     const parsedLimit = parseInt(limitParam, 10);
     const parsedPage = parseInt(page, 10);
 
-    if (parsedPage < 1 || parsedLimit < 1) {
-      return res.status(400).json({ error: 'Invalid page or limit parameter' });
+    if (!Number.isInteger(parsedLimit) || parsedLimit < 1) {
+      return res.status(400).json({ error: 'El parámetro "limit" debe ser un número entero mayor que 0' });
     }
 
+    if (!Number.isInteger(parsedPage) || parsedPage < 1) {
+      return res.status(400).json({ error: 'El parámetro "page" debe ser un número entero mayor que 0' });
+    }
+
+    // Referencia a la colección de logs
     const logsCol = collection(db, 'logs');
 
-    // Add an orderBy clause to ensure consistent results
+    // Configuración base de la consulta con orden y límite
     const baseQuery = query(logsCol, orderBy('timestamp', 'desc'), limit(parsedLimit));
 
-    // Determine the starting point for pagination
-    let startAtSnapshot;
+    // Determinar el punto de inicio para la paginación
+    let startAtSnapshot = null;
     if (parsedPage > 1) {
       const offsetQuery = query(logsCol, orderBy('timestamp', 'desc'), limit((parsedPage - 1) * parsedLimit));
       const offsetSnapshot = await getDocs(offsetQuery);
@@ -488,21 +820,23 @@ app.get('/api/admin/logs', isAuthenticated, checkAdmin, async (req, res) => {
       }
     }
 
-    // Fetch the logs with the pagination applied
+    // Aplicar la paginación final
     const finalQuery = startAtSnapshot ? query(baseQuery, startAfter(startAtSnapshot)) : baseQuery;
     const logsSnapshot = await getDocs(finalQuery);
 
+    // Construir la lista de logs
     const logs = logsSnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data(),
+      ...sanitizeInput(doc.data()),
     }));
 
-    // Get total logs count
+    // Obtener el total de registros
     const totalSnapshot = await getDocs(logsCol);
     const totalCount = totalSnapshot.size;
     const totalPages = Math.ceil(totalCount / parsedLimit);
 
-    res.status(200).json({
+    // Responder con los logs y los metadatos
+    return res.status(200).json({
       logs,
       metadata: {
         currentPage: parsedPage,
@@ -511,28 +845,36 @@ app.get('/api/admin/logs', isAuthenticated, checkAdmin, async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching logs:', error);
-    res.status(500).json({ error: 'Error fetching logs' });
+    console.error('Error al obtener los logs:', error);
+
+    // Respuesta de error
+    return res.status(500).json({ error: 'Error al obtener los logs' });
   }
 });
 
 app.get('/api/admin/critical-logs', isAuthenticated, checkAdmin, async (req, res) => {
   try {
-    const { limit: limitParam = 10, page = 1 } = req.query; 
+    // Sanitizar y validar los parámetros de consulta
+    const { limit: limitParam = 10, page = 1 } = sanitizeInput(req.query);
     const parsedLimit = parseInt(limitParam, 10);
     const parsedPage = parseInt(page, 10);
 
-    if (parsedPage < 1 || parsedLimit < 1) {
-      return res.status(400).json({ error: 'Invalid page or limit parameter' });
+    if (!Number.isInteger(parsedLimit) || parsedLimit < 1) {
+      return res.status(400).json({ error: 'El parámetro "limit" debe ser un número entero mayor que 0' });
     }
 
+    if (!Number.isInteger(parsedPage) || parsedPage < 1) {
+      return res.status(400).json({ error: 'El parámetro "page" debe ser un número entero mayor que 0' });
+    }
+
+    // Referencia a la colección de logs críticos
     const criticalLogsCol = collection(db, 'critical_logs');
 
-    // Add an orderBy clause to ensure consistent results
+    // Configuración base de la consulta con orden y límite
     const baseQuery = query(criticalLogsCol, orderBy('timestamp', 'desc'), limit(parsedLimit));
 
-    // Determine the starting point for pagination
-    let startAtSnapshot;
+    // Determinar el punto de inicio para la paginación
+    let startAtSnapshot = null;
     if (parsedPage > 1) {
       const offsetQuery = query(criticalLogsCol, orderBy('timestamp', 'desc'), limit((parsedPage - 1) * parsedLimit));
       const offsetSnapshot = await getDocs(offsetQuery);
@@ -543,21 +885,23 @@ app.get('/api/admin/critical-logs', isAuthenticated, checkAdmin, async (req, res
       }
     }
 
-    // Fetch the critical logs with the pagination applied
+    // Aplicar la paginación final
     const finalQuery = startAtSnapshot ? query(baseQuery, startAfter(startAtSnapshot)) : baseQuery;
     const criticalLogsSnapshot = await getDocs(finalQuery);
 
+    // Construir la lista de logs críticos
     const criticalLogs = criticalLogsSnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data(),
+      ...sanitizeInput(doc.data()),
     }));
 
-    // Get total critical logs count
+    // Obtener el total de registros de logs críticos
     const totalSnapshot = await getDocs(criticalLogsCol);
     const totalCount = totalSnapshot.size;
     const totalPages = Math.ceil(totalCount / parsedLimit);
 
-    res.status(200).json({
+    // Responder con los logs críticos y metadatos de paginación
+    return res.status(200).json({
       criticalLogs,
       metadata: {
         currentPage: parsedPage,
@@ -566,8 +910,10 @@ app.get('/api/admin/critical-logs', isAuthenticated, checkAdmin, async (req, res
       },
     });
   } catch (error) {
-    console.error('Error fetching critical logs:', error);
-    res.status(500).json({ error: 'Error fetching critical logs' });
+    console.error('Error al obtener los logs críticos:', error);
+
+    // Responder con error en caso de fallo
+    return res.status(500).json({ error: 'Error al obtener los logs críticos' });
   }
 });
 

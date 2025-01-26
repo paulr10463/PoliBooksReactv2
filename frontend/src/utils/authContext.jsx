@@ -17,7 +17,11 @@ export function AuthProvider({ children }) {
     setAuthData(data);
     // Utilizamos js-cookie para establecer o eliminar la cookie
     if (data.isAuthorized) {
-      Cookies.set('authData', JSON.stringify(data), { expires: 1 }); // La cookie caduca en 7 días
+      Cookies.set('authData', JSON.stringify(data), {
+        expires: 1, // 1 day
+        secure: true, // HTTPS only
+        sameSite: 'Strict', // Protect against CSRF
+      });
     } else {
       Cookies.remove('authData');
     }

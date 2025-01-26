@@ -36,7 +36,7 @@ const ProductDetail = ({ book }) => {
           navigation
           pagination={{ clickable: true }}
         >
-          {book.image.length > 0 ? (
+          {book.image && book.image.length > 0 ? (
             book.image.map((url, index) => (
               <SwiperSlide key={index}>
                 <img src={url} alt="imagen del libro" />

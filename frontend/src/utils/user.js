@@ -8,7 +8,7 @@ async function signIn(userData) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(userData),
+        body: JSON.stringify(userData)
       });
   
       if (response.ok) {

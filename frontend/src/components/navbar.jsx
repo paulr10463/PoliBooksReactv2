@@ -12,11 +12,13 @@ import { isAdmin } from "../services/admin.service";
 const Navbar = () => {
     const [admin, setAdmin] = useState(false);
     const { authData } = useAuth();
+    
     isAdmin(authData.idToken).then((response) => {
-        if (response) {
+        if (response.status === 200) {
             setAdmin(true);
         }
     });
+
     function handleSearch() {
         const searchInputValue = document.getElementById("navbar-search-input").value;
         window.location.href = `/search/books?title=${encodeURIComponent(searchInputValue)}`;
