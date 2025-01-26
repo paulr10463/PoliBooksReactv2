@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import "./Payment.css";
 import { useAuth } from "../../utils/authContext.jsx";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import Swal from "sweetalert2";
+import { confirmPayment } from "../../services/payment.service.js";
 
 export default function Payment({ book }) {
     const DEFAULT_IMAGE =
         "https://firebasestorage.googleapis.com/v0/b/polibooksweb.appspot.com/o/polibooks%2FnotAvailableBook.png?alt=media&token=0b68b219-5e8a-4652-92d5-7b1ddcd2d129";
     const { authData } = useAuth();
-    const [isLoading, setIsLoading] = useState(false);
 
     const handlePayPalApprove = async (orderID) => {
         Swal.fire({
@@ -19,50 +19,30 @@ export default function Payment({ book }) {
                 Swal.showLoading();
             },
         });
-
         try {
-            // Send the token to the backend
-            const response = await fetch("http://localhost:3000/api/payment/confirm", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${authData.token}`, // Pass the user's auth token
+            await confirmPayment(orderID, book.id, authData.userID, authData.idToken);
+        
+            // Payment confirmed successfully
+            Swal.fire({
+                icon: "success",
+                title: "Payment Successful",
+                text: "Your payment has been processed successfully.",
+                didClose: () => {
+                    window.location.href = "/"; // Redirect to home after payment
                 },
-                body: JSON.stringify({
-                    orderID,
-                    bookId: book.id,
-                    userId: authData.userID,
-                }),
             });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                Swal.fire({
-                    icon: "success",
-                    title: "Payment Successful",
-                    text: "Your payment has been processed successfully.",
-                    didClose: () => {
-                        window.location.href = "/"; // Redirect to home after payment
-                    }
-                });
-
-            } else {
-                console.error("Error confirming payment:", data.error);
-                Swal.fire({
-                    icon: "error",
-                    title: "Payment Failed",
-                    text: "There was an issue confirming your payment with the server.",
-                });
-            }
         } catch (error) {
-            console.error("Error communicating with backend:", error);
+            // Handle errors
+            console.error("Error communicating with backend:", error.message);
             Swal.fire({
                 icon: "error",
-                title: "Network Error",
-                text: "Unable to process the payment due to a network issue. Please try again.",
+                title: "Payment Failed",
+                text: error.message.includes("Failed to verify payment")
+                    ? "There was an issue confirming your payment with the server."
+                    : "Unable to process the payment due to a network issue. Please try again.",
             });
-        } 
+        }
+        
     };
 
     return authData.isAuthorized ? (

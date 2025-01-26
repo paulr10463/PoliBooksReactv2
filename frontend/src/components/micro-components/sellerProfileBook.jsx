@@ -29,7 +29,6 @@ const SellerBookItem = ({ book }) => {
                 setIsLoading(true);
                 deleteBooks(book.id, 13123)
                     .then(() => {
-                        console.log("Action completed in Seller Profile");
                         Swal.fire('¡Hecho!', 'La acción se ha completado.', 'success');
                     })
                     .catch((error) => {

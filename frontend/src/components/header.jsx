@@ -12,10 +12,8 @@ const Header = () => {
   const { authData, setAuthorization } = useAuth();
 
   useEffect(() => {
-    console.log(authData);
     if (!authData){ setButtonValue("Iniciar sesión"); return;}
     authData.isAuthorized ?setButtonValue("Cerrar sesión"):setButtonValue("Iniciar sesión");  
-    console.log(authData.isAuthorized); 
   }, [authData]);
 
   const openModal = () => {

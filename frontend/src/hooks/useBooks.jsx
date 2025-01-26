@@ -73,7 +73,6 @@ export const useBooksByUserId = (userID, tokenID) => {
         setIsLoading(true);
         fetchBooksAuthByUser(userID, tokenID)
             .then(data => {
-                console.log('data', data);
                 setBooks(data);
                 setIsLoading(false);
             })

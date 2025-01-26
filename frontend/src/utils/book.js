@@ -23,8 +23,7 @@ async function saveBook(userID, tokenId, title, description, brand, level, avail
         body: JSON.stringify(bookData),
       })
         .then((response) => response.json())
-        .then((data) => {
-          console.log(data); // Datos de la respuesta del servidor
+        .then((data) => {// Datos de la respuesta del servidor
           return true;
         })
         .catch((error) => {

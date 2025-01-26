@@ -1,10 +1,10 @@
 const firebaseConfig = {
-  apiKey: "AIzaSyDooJILtGiVs2D32v9ghXDXWqXzHcLJi5E",
-  authDomain: "polibooksweb.firebaseapp.com",
-  projectId: "polibooksweb",
-  storageBucket: "polibooksweb.appspot.com",
-  messagingSenderId: "84355748578",
-  appId: "1:84355748578:web:a781596a92a7f02a0644bb"
+  apiKey: process.env.API_KEY,
+  authDomain: process.env.AUTH_DOMAIN,
+  projectId: process.env.PROJECT_ID,
+  storageBucket: process.env.STORAGE_BUCKET,
+  messagingSenderId: process.env.MESSAGING_SENDER_ID,
+  appId: process.env.APP_ID
 };
 
 module.exports = firebaseConfig

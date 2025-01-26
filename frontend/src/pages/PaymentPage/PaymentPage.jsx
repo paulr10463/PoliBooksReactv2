@@ -6,16 +6,13 @@ import Footer from '../../components/footer.jsx'
 import './PaymentPage.css'
 import { useAuth } from '../../utils/authContext.jsx'
 import { useLocation } from "react-router-dom";
-import { useEffect } from 'react';
 
 export default function PaymentPage() {
     const { authData } = useAuth();
     const location = useLocation();
 
     const book = location.state;
-    useEffect(() => {
-        console.log(book);
-    }, [book]);
+
 
     return (
         authData.isAuthorized ? (

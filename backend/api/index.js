@@ -148,7 +148,6 @@ app.get('/api/isAuth', isAuthenticated, (req, res) => {
 app.get('/api/read/book/auth/:userID', isAuthenticated, async (req, res) => {
   try {
     const userID = req.params.userID
-    console.log(userID)
     const booksCol = collection(db, 'books')
     const querySnapshot = await getDocs(query(booksCol, where('userID', '==', userID)))
     const booksList = []
@@ -230,7 +229,6 @@ app.post('/api/user/reset-password', async (req, res) => {
   const { email } = req.body
   try {
     const resetPassword = await sendPasswordResetEmail(auth, email)
-    console.log(resetPassword)
     res.status(200).json({message: "Correo enviado exitosamete"})
   } catch (error) {
     // No se pudo enviar el correo de restablecimiento de contraseña
@@ -266,7 +264,6 @@ app.delete('/api/delete/book/:bookId' , isAuthenticated, async (req, res) => {
 app.post('/api/create/book', isAuthenticated, async (req, res) => {
   try {
     const bookData = req.body
-    console.log(bookData)
     const newBookRef = await addDoc(collection(db,'books'), bookData)
     res.status(201).json({ message: 'Libro creado exitosamente', bookId: newBookRef.id })
   } catch (error) {
@@ -306,12 +303,8 @@ app.post('/api/payment/confirm', isAuthenticated,  async (req, res) => {
       const PAYPAL_API = 'https://api-m.sandbox.paypal.com'; // Replace with live API in production
       
       const CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
-      console.log(CLIENT_ID);
       const SECRET = process.env.PAYPAL_SECRET;
-      console.log(SECRET);
-      // Get PayPal access token
       const auth = Buffer.from(`${CLIENT_ID}:${SECRET}`).toString('base64');
-      console.log("Auth:" + auth);
 
       const tokenResponse = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
           method: 'POST',
@@ -323,7 +316,6 @@ app.post('/api/payment/confirm', isAuthenticated,  async (req, res) => {
       });
 
       const tokenData = await tokenResponse.json();
-      console.log(tokenData);
       // Verify the order with PayPal
       const orderResponse = await fetch(`${PAYPAL_API}/v2/checkout/orders/${orderID}`, {
           headers: {
@@ -353,7 +345,6 @@ app.post('/api/payment/confirm', isAuthenticated,  async (req, res) => {
       // Guardar la orden en Firestore
       const newOrderRef = await addDoc(collection(db, 'orders'), orderDetails);
 
-      console.log(`Orden ${orderID} guardada correctamente en Firestore con ID ${newOrderRef.id}.`);
       res.status(201).json({ success: true, message: 'Pago confirmado y orden guardada exitosamente', orderId: newOrderRef.id });
     } else {
       res.status(400).json({ error: 'Orden no completada' });
@@ -367,7 +358,6 @@ app.post('/api/payment/confirm', isAuthenticated,  async (req, res) => {
 app.get('/api/read/orders/auth/:userID', isAuthenticated, async (req, res) => {
   try {
     const userID = req.params.userID; // Obtener el ID del usuario de los parámetros de la URL
-    console.log(`Consultando órdenes para el usuario: ${userID}`);
 
     const ordersCol = collection(db, 'orders'); // Referencia a la colección 'orders'
     const querySnapshot = await getDocs(query(ordersCol, where('userId', '==', userID))); // Filtrar órdenes por 'userID'

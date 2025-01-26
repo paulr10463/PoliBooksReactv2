@@ -12,29 +12,19 @@ export default function ChatGroup() {
     const { authData } = useAuth(); // Removed setAuthorization since it's not used
      
     useEffect(() => {
-        console.log('authData', authData.name);
         let messageObject; // Declare messageObject here
 
         // Create a WebSocket connection
         const ws = new WebSocket(environment.WS);
     
-        // Set up event listeners after WebSocket is opened
-        ws.addEventListener('open', (event) => {
-            console.log('Conexión establecida con el servidor WebSocket');
-        });
-    
         ws.addEventListener('message', (event) => {
             event.data.arrayBuffer().then((data) => {
                 const message = new TextDecoder('utf-8').decode(data);
-                console.log('Received message:', message);
                 messageObject = JSON.parse(message);
                 setMessages(prevMessages => [...prevMessages, messageObject]); // Update messages state correctly
             });
         });
     
-        ws.addEventListener('close', () => {
-            console.log('Connection closed');
-        });
     
         ws.addEventListener('error', (event) => {
             console.error('WebSocket error observed:', event);

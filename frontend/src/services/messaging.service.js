@@ -3,7 +3,6 @@ let messageDiv = document.querySelector("#messages");
 let errorMessageSpan = document.querySelector("#errorMessage");
 
 const getJwtAuth = (username, password) => {
-    console.log(username, password)
     fetch("https://localhost:5000/auth?username=" + username + "&password=" + password)
     .then(response => response.text())
         .then(response => {
@@ -36,12 +35,8 @@ const openWsConnection = (jwtAuth) => {
     }
     ws = new WebSocket("wss://localhost:5000/ws?token=" + jwtAuth);
     
-    ws.onopen = (event) => {
-        console.log("WebSocket connection established.");
-    };
 
     ws.onmessage = (event) => {
-        console.log("WebSocket message received: ", event.data);
         if (event.data.includes("Error")) {
             errorMessageSpan.innerHTML = event.data;
         } else {
@@ -55,7 +50,4 @@ const openWsConnection = (jwtAuth) => {
         console.error("WebSocket error received: ", event);
     };
 
-    ws.onclose = (event) => {
-        console.log("WebSocket connection closed.");
-    };
 };

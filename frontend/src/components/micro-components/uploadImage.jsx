@@ -20,7 +20,6 @@ function UploadImage({ defaultImages, imagesCallback }) {
     fileInfos.map((fileInfo, index) => (
       images.push(fileInfo.url)
     ));
-    console.log(images);
     imagesCallback && imagesCallback(images);
   }, [fileInfos]);
 

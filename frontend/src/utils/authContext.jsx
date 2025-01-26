@@ -14,7 +14,6 @@ export function AuthProvider({ children }) {
   const [authData, setAuthData] = useState(checkAuthorization());
 
   const setAuthorization = (data) => {
-    console.log(data);
     setAuthData(data);
     // Utilizamos js-cookie para establecer o eliminar la cookie
     if (data.isAuthorized) {
