@@ -34,7 +34,6 @@ const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
       'https://poli-books-react.vercel.app',
-      'http://localhost:5173',
     ];
     if (allowedOrigins.includes(origin) || !origin) {
       // Permitir el origen
