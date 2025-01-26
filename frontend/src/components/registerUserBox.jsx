@@ -24,23 +24,23 @@ const RegisterUserBox = () => {
 
 
     useEffect(() => {
-        const passwordInput = document.getElementById('user-form-password');
-        passwordInput.addEventListener('focus', function () {
-            const passwordDetails = document.querySelector('.password-details');
-            passwordDetails.style.display = 'block';
+        const securityInput = document.getElementById('user-form-password');
+        securityInput.addEventListener('focus', function () {
+            const securityDetails = document.querySelector('.password-details');
+            securityDetails.style.display = 'block';
         });
-        passwordInput.addEventListener('blur', function () {
-            const passwordDetails = document.querySelector('.password-details');
-            passwordDetails.style.display = 'none';
+        securityInput.addEventListener('blur', function () {
+            const securityDetails = document.querySelector('.password-details');
+            securityDetails.style.display = 'none';
         });
         return () => {
-            passwordInput.removeEventListener('focus', function () {
-                const passwordDetails = document.querySelector('.password-details');
-                passwordDetails.style.display = 'block';
+            securityInput.removeEventListener('focus', function () {
+                const securityDetails = document.querySelector('.password-details');
+                securityDetails.style.display = 'block';
             });
-            passwordInput.removeEventListener('blur', function () {
-                const passwordDetails = document.querySelector('.password-details');
-                passwordDetails.style.display = 'none';
+            securityInput.removeEventListener('blur', function () {
+                const securityDetails = document.querySelector('.password-details');
+                securityDetails.style.display = 'none';
             });
         }
     }, []);

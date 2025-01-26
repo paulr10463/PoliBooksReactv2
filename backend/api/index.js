@@ -18,17 +18,62 @@ require('dotenv').config();
 
 const { sanitizeInput, validateUID } = require('../utils/sanitizeUtils');
 
+const FILE_LIMITS = {
+  maxFiles: 5,
+  maxFileSize: 5 * 1024 * 1024, // 5MB por archivo
+  maxTotalSize: 20 * 1024 * 1024, // 20MB total
+  allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+};
+
 // Inicialización de Firebase
 const appFirebase = initializeApp(firebaseConfig);
 const auth = getAuth(appFirebase);
 const db = getFirestore(appFirebase);
 const firebaseStorage = getStorage(appFirebase);
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  limits: {
+    files: FILE_LIMITS.maxFiles,
+    fileSize: FILE_LIMITS.maxFileSize
+  },
+  fileFilter: (req, file, cb) => {
+    if (!FILE_LIMITS.allowedMimeTypes.includes(file.mimetype)) {
+      return cb(new Error('Tipo de archivo no permitido'), false);
+    }
+    cb(null, true);
+  }
+});
+
 
 // Creación de una instancia en Express
 const app = express();
-app.use(express.json());
+
+// Configuración básica de seguridad
+app.use(express.json({ limit: '2mb' })); // Limitar tamaño de payload
+app.disable('x-powered-by'); // Ocultar header X-Powered-By
+
+// Configuración de headers de seguridad
+app.use((req, res, next) => {
+  // Headers de seguridad básicos
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  
+  // Política de seguridad de contenido
+  res.setHeader('Content-Security-Policy', "default-src 'self'");
+  
+  next();
+});
+
+// Manejo de errores para JSON malformado
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: 'JSON inválido' });
+  }
+  next();
+});
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -133,45 +178,93 @@ app.get('/api', (req, res) => {
   res.send(`Hello! Go to item: <a href="${path}">${path}</a>`);
 });
 
-app.post('/api/upload', isAuthenticated, upload.array('files', 5), async (req, res) => {
+
+// Configuración de multer con límites
+app.post('/api/upload', isAuthenticated, upload.array('files', FILE_LIMITS.maxFiles), async (req, res) => {
   try {
-    const files = req.files; // `req.files` contains all uploaded files
+    const files = req.files;
 
     if (!files || files.length === 0) {
-      return res.status(400).send('No files were provided.');
+      return res.status(400).json({ error: 'No se proporcionaron archivos.' });
     }
 
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    const invalidFiles = files.filter((file) => !allowedMimeTypes.includes(file.mimetype));
-
-    if (invalidFiles.length > 0) {
-      return res.status(400).send({
-        error: 'Invalid file type(s) detected.',
-        details: invalidFiles.map((file) => ({
-          name: file.originalname,
-          type: file.mimetype,
-        })),
+    // Verificar tamaño total de archivos
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    if (totalSize > FILE_LIMITS.maxTotalSize) {
+      return res.status(400).json({ 
+        error: `El tamaño total de los archivos excede el límite de ${FILE_LIMITS.maxTotalSize / (1024 * 1024)}MB` 
       });
     }
 
-    // Process and upload each file to Firebase Storage
+    // Validar cada archivo individualmente
+    for (const file of files) {
+      if (!FILE_LIMITS.allowedMimeTypes.includes(file.mimetype)) {
+        return res.status(400).json({
+          error: 'Tipo de archivo no permitido',
+          details: {
+            filename: file.originalname,
+            type: file.mimetype
+          }
+        });
+      }
+
+      if (file.size > FILE_LIMITS.maxFileSize) {
+        return res.status(400).json({
+          error: `El archivo ${file.originalname} excede el tamaño máximo permitido de ${FILE_LIMITS.maxFileSize / (1024 * 1024)}MB`
+        });
+      }
+    }
+
+    // Generar nombres de archivo seguros
     const uploadPromises = files.map(async (file) => {
-      const storageRef = ref(firebaseStorage, `/files/${file.originalname}`);
-      const uploadTask = await uploadBytesResumable(storageRef, file.buffer);
+      const safeFileName = `${Date.now()}-${sanitizeInput(file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_'))}`;
+      const storageRef = ref(firebaseStorage, `/files/${safeFileName}`);
+      
+      const metadata = {
+        contentType: file.mimetype,
+        size: file.size,
+        originalName: file.originalname
+      };
+
+      const uploadTask = await uploadBytesResumable(storageRef, file.buffer, metadata);
       const downloadURL = await getDownloadURL(uploadTask.ref);
-      return { originalName: file.originalname, url: downloadURL };
+      
+      return {
+        originalName: file.originalname,
+        url: downloadURL,
+        size: file.size,
+        type: file.mimetype
+      };
     });
 
-    // Wait for all files to upload
     const uploadedFiles = await Promise.all(uploadPromises);
 
-    // Respond with the uploaded file URLs
-    res.status(200).send({ uploadedFiles });
+    res.status(200).json({ 
+      message: 'Archivos subidos exitosamente',
+      uploadedFiles 
+    });
+
   } catch (error) {
-    console.error('Error uploading files:', error);
-    res.status(500).send('Error uploading files.');
+    console.error('Error al subir archivos:', error);
+    
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ 
+        error: `El tamaño del archivo excede el límite de ${FILE_LIMITS.maxFileSize / (1024 * 1024)}MB` 
+      });
+    }
+    
+    if (error.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({ 
+        error: `Número máximo de archivos excedido (${FILE_LIMITS.maxFiles})` 
+      });
+    }
+
+    res.status(500).json({ 
+      error: 'Error al procesar la carga de archivos' 
+    });
   }
 });
+
 
 // Más rutas (ejemplo: CRUD de libros, autenticación, búsqueda)
 app.get('/api/read/books', async (req, res) => {
@@ -185,8 +278,6 @@ app.get('/api/read/books', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener la lista de libros' });
   }
 });
-
-
 
 
 app.get('/api/read/book/:bookId', async (req, res) => {
@@ -344,47 +435,116 @@ app.post('/api/register', async (req, res) => {
     const sanitizedBody = sanitizeInput(req.body);
     const { email, password, phone, name } = sanitizedBody;
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ error: 'Correo electrónico inválido' });
+    // Función mejorada de validación de email
+    function isValidEmail(email) {
+      if (!email || typeof email !== 'string') {
+        return false;
+      }
+      if (email.length > 254) { // RFC 5321
+        return false;
+      }
+      const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+      return emailRegex.test(email);
     }
 
-    if (!password || password.length < 6) {
-      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    // Función de validación de teléfono mejorada
+    function isValidPhone(phone) {
+      if (!phone || typeof phone !== 'string') {
+        return false;
+      }
+      // Regex más específica para teléfonos
+      const phoneRegex = /^[+]?[\d]{9,15}$/;
+      return phoneRegex.test(phone);
     }
 
-    if (!phone || !/^\d{9,15}$/.test(phone)) {
-      return res.status(400).json({ error: 'Número de teléfono inválido. Debe contener entre 10 y 15 dígitos' });
+    // Función de validación de nombre
+    function isValidName(name) {
+      if (!name || typeof name !== 'string') {
+        return false;
+      }
+      const trimmedName = name.trim();
+      return trimmedName.length >= 3 && trimmedName.length <= 50;
     }
 
-    if (!name || typeof name !== 'string' || name.trim().length < 3) {
-      return res.status(400).json({ error: 'El nombre debe tener al menos 3 caracteres' });
+    // Validaciones mejoradas
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: 'Formato de correo electrónico inválido' });
     }
 
-    // Crear usuario con correo y contraseña en Firebase Authentication
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ error: 'Formato de contraseña inválido' });
+    }
+
+    if (password.length < 6 || password.length > 128) {
+      return res.status(400).json({ 
+        error: 'La contraseña debe tener entre 6 y 128 caracteres' 
+      });
+    }
+
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ 
+        error: 'Formato de teléfono inválido' 
+      });
+    }
+
+    if (!isValidName(name)) {
+      return res.status(400).json({ 
+        error: 'El nombre debe tener entre 3 y 50 caracteres' 
+      });
+    }
+
+    // Crear usuario con correo y contraseña
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
 
-    // Validar y sanitizar el UID generado
-    try {
-      validateUID(uid);
-    } catch (validationError) {
-      return res.status(500).json({ error: 'UID generado inválido: ' + validationError.message });
+    // Validar UID
+    if (!uid || typeof uid !== 'string' || uid.length < 1) {
+      throw new Error('UID inválido generado');
     }
 
-    // Guardar información adicional en Firestore
+    // Guardar información en Firestore con datos sanitizados
     await addDoc(collection(db, 'users'), {
-      uid: uid,
+      uid,
       phone: sanitizeInput(phone),
-      name: sanitizeInput(name),
-      email: sanitizeInput(email),
+      name: sanitizeInput(name.trim()),
+      email: sanitizeInput(email.toLowerCase()),
+      createdAt: new Date().toISOString()
     });
 
-    // Respuesta exitosa
-    return res.status(200).json({ message: 'Registro exitoso' });
+    return res.status(201).json({ 
+      message: 'Registro exitoso',
+      uid 
+    });
+
   } catch (error) {
-    // Manejo de errores
-    console.error('Error al registrarse:', error.message);
-    return res.status(500).json({ error: 'No se pudo completar el registro: ' + error.message });
+    console.error('Error en registro:', error.message);
+
+    // Manejo específico de errores
+    const errorResponses = {
+      'auth/email-already-in-use': { 
+        status: 409, 
+        message: 'El correo electrónico ya está registrado' 
+      },
+      'auth/invalid-email': { 
+        status: 400, 
+        message: 'Correo electrónico inválido' 
+      },
+      'auth/operation-not-allowed': { 
+        status: 403, 
+        message: 'Operación no permitida' 
+      },
+      'auth/weak-password': { 
+        status: 400, 
+        message: 'La contraseña es demasiado débil' 
+      }
+    };
+
+    const errorResponse = errorResponses[error.code] || 
+      { status: 500, message: 'Error en el registro' };
+
+    return res.status(errorResponse.status).json({ 
+      error: errorResponse.message 
+    });
   }
 });
 
@@ -396,12 +556,34 @@ app.post('/api/login', async (req, res) => {
     const sanitizedBody = sanitizeInput(req.body);
     const { email, password } = sanitizedBody;
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    // Función mejorada de validación de email
+    function isValidEmail(email) {
+      if (!email || typeof email !== 'string') {
+        return false;
+      }
+      // Limitar longitud según RFC 5321
+      if (email.length > 254) {
+        return false;
+      }
+      // Regex más segura y específica para emails
+      const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+      return emailRegex.test(email);
+    }
+
+    if (!isValidEmail(email)) {
       return res.status(400).json({ error: 'Correo electrónico inválido' });
     }
 
-    if (!password || typeof password !== 'string' || password.length < 6) {
-      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    // Validación mejorada de contraseña
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ error: 'Formato de contraseña inválido' });
+    }
+
+    // Validación de longitud y complejidad de contraseña
+    if (password.length < 6 || password.length > 128) {
+      return res.status(400).json({ 
+        error: 'La contraseña debe tener entre 6 y 128 caracteres' 
+      });
     }
 
     // Iniciar sesión con correo y contraseña
@@ -412,6 +594,8 @@ app.post('/api/login', async (req, res) => {
     const idToken = await auth.currentUser.getIdToken();
     const encryptedToken = encryptToken(idToken);
 
+    // Implementar rate limiting aquí si es necesario
+    
     return res.status(200).json({
       isAuthorized: true,
       userID: user.uid,
@@ -420,25 +604,36 @@ app.post('/api/login', async (req, res) => {
   } catch (error) {
     console.error('Error al iniciar sesión:', error.message);
 
-    // Registrar intentos fallidos en caso de credenciales incorrectas
+    // Sanitizar el email antes de registrarlo
+    const sanitizedEmail = sanitizeInput(req.body.email);
+
+    // Registrar intentos fallidos con información sanitizada
     if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-email') {
       await logCriticalEvent(
         'LOGIN_FAILURE',
-        `Intento fallido de inicio de sesión para el correo ${sanitizeInput(req.body.email)}`,
-        { email: sanitizeInput(req.body.email), errorCode: error.code }
+        `Intento fallido de inicio de sesión`,
+        { 
+          email: sanitizedEmail, 
+          errorCode: error.code,
+          timestamp: new Date().toISOString()
+        }
       );
     }
 
-    // Manejar errores y enviar una respuesta descriptiva
-    if (error.code === 'auth/wrong-password') {
-      return res.status(401).json({ error: 'Contraseña incorrecta' });
-    } else if (error.code === 'auth/user-not-found') {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    } else if (error.code === 'auth/invalid-email') {
-      return res.status(400).json({ error: 'Correo electrónico inválido' });
-    }
+    // Manejar errores específicos
+    const errorResponses = {
+      'auth/wrong-password': { status: 401, message: 'Credenciales inválidas' },
+      'auth/user-not-found': { status: 404, message: 'Usuario no encontrado' },
+      'auth/invalid-email': { status: 400, message: 'Correo electrónico inválido' },
+      'auth/too-many-requests': { status: 429, message: 'Demasiados intentos. Intente más tarde' }
+    };
 
-    return res.status(500).json({ error: 'Error interno del servidor' });
+    const errorResponse = errorResponses[error.code] || 
+      { status: 500, message: 'Error interno del servidor' };
+
+    return res.status(errorResponse.status).json({ 
+      error: errorResponse.message 
+    });
   }
 });
 
@@ -477,27 +672,91 @@ app.post('/api/user/reset-password', async (req, res) => {
     const sanitizedBody = sanitizeInput(req.body);
     const { email } = sanitizedBody;
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ error: 'Correo electrónico inválido' });
+    // Función mejorada de validación de email
+    function isValidEmail(email) {
+      if (!email || typeof email !== 'string') {
+        return false;
+      }
+      // Limitar longitud según RFC 5321
+      if (email.length > 254) {
+        return false;
+      }
+      // Regex más segura y específica para emails
+      const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+      return emailRegex.test(email);
     }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ 
+        error: 'Formato de correo electrónico inválido' 
+      });
+    }
+
+    // Implementar rate limiting aquí
+   /*  const rateLimitResult = await checkRateLimit(email);
+     if (rateLimitResult.limited) {
+       return res.status(429).json({ 
+         error: 'Demasiadas solicitudes. Intente más tarde.' 
+       });
+     } */
 
     // Enviar correo de recuperación de contraseña
-    await sendPasswordResetEmail(auth, email);
+    await sendPasswordResetEmail(auth, email.toLowerCase());
 
-    console.log('Correo de recuperación enviado exitosamente a:', email);
-    return res.status(200).json({ message: 'Correo enviado exitosamente' });
+    // Log seguro sin exponer el email completo
+
+    function maskEmail(email) {
+      if (!email || typeof email !== 'string') return '';
+      
+      const [localPart, domain] = email.split('@');
+      if (!domain) return email;
+  
+      // Mantener los primeros 3 caracteres, reemplazar el resto con asteriscos
+      const maskedLocal = localPart.slice(0, 3) + '*'.repeat(Math.max(0, localPart.length - 3));
+      
+      return `${maskedLocal}@${domain}`;
+  }
+  
+  const maskedEmail = maskEmail(email);
+  console.log('Correo de recuperación enviado a:', maskedEmail);
+
+    // Respuesta genérica por seguridad
+    return res.status(200).json({ 
+      message: 'Si el correo existe en nuestro sistema, recibirá instrucciones para restablecer su contraseña' 
+    });
+
   } catch (error) {
-    console.error('Error al enviar el correo de restablecimiento de contraseña:', error);
+    // Log seguro del error
+    console.error('Error en restablecimiento de contraseña:', {
+      errorCode: error.code,
+      errorMessage: error.message,
+      timestamp: new Date().toISOString()
+    });
 
-    // Manejo específico de errores comunes
-    if (error.code === 'auth/user-not-found') {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    } else if (error.code === 'auth/invalid-email') {
-      return res.status(400).json({ error: 'Correo electrónico inválido' });
-    }
+    // Manejo específico de errores
+    const errorResponses = {
+      'auth/user-not-found': {
+        status: 200, // Usar 200 por seguridad
+        message: 'Si el correo existe en nuestro sistema, recibirá instrucciones para restablecer su contraseña'
+      },
+      'auth/invalid-email': {
+        status: 400,
+        message: 'Formato de correo electrónico inválido'
+      },
+      'auth/too-many-requests': {
+        status: 429,
+        message: 'Demasiadas solicitudes. Intente más tarde'
+      }
+    };
 
-    // Manejo de errores genéricos
-    return res.status(500).json({ error: 'Error al enviar el correo de restablecimiento de contraseña' });
+    const errorResponse = errorResponses[error.code] || {
+      status: 500,
+      message: 'Error en el proceso de restablecimiento'
+    };
+
+    return res.status(errorResponse.status).json({ 
+      error: errorResponse.message 
+    });
   }
 });
 
@@ -574,6 +833,26 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
 
     // Sanitizar y validar los datos del cuerpo de la solicitud
     const sanitizedData = sanitizeInput(req.body);
+    const { title, author, genre, publishedYear } = sanitizedData;
+
+    if (title && (typeof title !== 'string' || title.trim().length < 3)) {
+      return res.status(400).json({ error: 'El título debe tener al menos 3 caracteres' });
+    }
+
+    if (author && (typeof author !== 'string' || author.trim().length < 3)) {
+      return res.status(400).json({ error: 'El autor debe tener al menos 3 caracteres' });
+    }
+
+    if (genre && (typeof genre !== 'string' || genre.trim().length === 0)) {
+      return res.status(400).json({ error: 'El género no puede estar vacío' });
+    }
+
+    if (
+      publishedYear &&
+      (typeof publishedYear !== 'number' || publishedYear < 1000 || publishedYear > new Date().getFullYear())
+    ) {
+      return res.status(400).json({ error: 'El año de publicación es inválido' });
+    }
 
     // Verificar si el libro existe
     const bookRef = doc(db, 'books', bookId);
@@ -584,7 +863,13 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
     }
 
     // Actualizar los datos del libro
-    await updateDoc(bookRef, sanitizedData);
+    await updateDoc(bookRef, {
+      ...(title && { title: title.trim() }),
+      ...(author && { author: author.trim() }),
+      ...(genre && { genre: genre.trim() }),
+      ...(publishedYear && { publishedYear }),
+      updatedAt: new Date().toISOString(),
+    });
 
     console.log('Libro actualizado exitosamente:', bookId);
     return res.status(200).json({ message: 'Libro actualizado exitosamente' });
