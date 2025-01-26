@@ -1,67 +1,62 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
-import '../../styles/textInput.css'
+import React, { useState, useEffect } from "react";
+import "../../styles/textInput.css";
 
-const TextInput = ({ id, type, isValidCallback, placeholder, index}) => {
-  const [isValid, setIsValid] = useState(false);
-  const [value, setValue] = useState("");
+const TextInput = ({ id, type, isValidCallback, placeholder, index }) => {
+    const [isValid, setIsValid] = useState(false);
+    const [value, setValue] = useState("");
 
-  let regex = /.*/;
-  let valueToReplace;
-  let maxLength = 100;
-  let fieldClass = "text";
+    let regex = /.*/;
+    let valueToReplace;
+    let maxLength = 100;
 
-  switch (type) {
-    case "phone":
-        regex = /^[0][9][0-9]{8}$/;
-        valueToReplace = /[^0-9]/g;
-        maxLength = 10;
-        break;
-    case "email":
-        regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-        maxLength = 255; // Longitud máxima recomendada para direcciones de correo electrónico
-        break;
-    case "password":
-        regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/
-        fieldClass = "password";
-        break;
-  }
+    switch (type) {
+        case "phone":
+            regex = /^[0][9][0-9]{8}$/;
+            valueToReplace = /[^0-9]/g;
+            maxLength = 10;
+            break;
+        case "email":
+            regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+            maxLength = 255;
+            break;
+        case "password":
+            regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+            break;
+        default:
+            break;
+    }
 
-  function handleInputChange(event) {
-    const inputValue = event.target.value;
-    const newValue = inputValue.substring(0, maxLength); // Limitar la longitud del valor
-    const isValidValue = regex.test(newValue);
-    setValue(newValue);
-    setIsValid(isValidValue);
-  }
+    const handleInputChange = (event) => {
+        const inputValue = event.target.value.replace(valueToReplace || "", "");
+        const newValue = inputValue.substring(0, maxLength);
+        const isValidValue = regex.test(newValue);
+        setValue(newValue);
+        setIsValid(isValidValue);
+    };
 
-  useEffect(() => {
-    // Validamos que el valor introducido solo contenga números
-    isValidCallback && isValidCallback(index, isValid);
-  }, [isValid]);
+    useEffect(() => {
+        isValidCallback(index, isValid);
+    }, [isValid]);
 
     return (
-        <div className='inputBox'>
+        <div className="inputBox">
             <input
-                required="required"
+                required
                 id={id}
-                type={fieldClass}
+                type="text"
                 onChange={handleInputChange}
-                value={value} // Establecer el valor controlado
+                value={value}
                 className={isValid ? "is-valid" : "is-invalid"}
-            >
-            </input>
+            />
             <span>{placeholder}</span>
         </div>
     );
 };
 
 TextInput.defaultProps = {
-  value: "",
-  onChange: () => { },
-  type: "text",
-  fieldClass: "text",
-  placeholder: "Placeholder"
+    value: "",
+    type: "text",
+    placeholder: "Placeholder",
 };
 
 export default TextInput;
