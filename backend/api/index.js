@@ -33,7 +33,7 @@ app.use(express.json());
 const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
-      'https://poli-books-react.vercel.app',
+      'https://poli-books-react.vercel.app'
     ];
     if (allowedOrigins.includes(origin) || !origin) {
       // Permitir el origen
@@ -352,7 +352,7 @@ app.post('/api/register', async (req, res) => {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
     }
 
-    if (!phone || !/^\d{10,15}$/.test(phone)) {
+    if (!phone || !/^\d{9,15}$/.test(phone)) {
       return res.status(400).json({ error: 'Número de teléfono inválido. Debe contener entre 10 y 15 dígitos' });
     }
 
