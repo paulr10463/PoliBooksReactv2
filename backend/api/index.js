@@ -574,26 +574,6 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
 
     // Sanitizar y validar los datos del cuerpo de la solicitud
     const sanitizedData = sanitizeInput(req.body);
-    const { title, author, genre, publishedYear } = sanitizedData;
-
-    if (title && (typeof title !== 'string' || title.trim().length < 3)) {
-      return res.status(400).json({ error: 'El título debe tener al menos 3 caracteres' });
-    }
-
-    if (author && (typeof author !== 'string' || author.trim().length < 3)) {
-      return res.status(400).json({ error: 'El autor debe tener al menos 3 caracteres' });
-    }
-
-    if (genre && (typeof genre !== 'string' || genre.trim().length === 0)) {
-      return res.status(400).json({ error: 'El género no puede estar vacío' });
-    }
-
-    if (
-      publishedYear &&
-      (typeof publishedYear !== 'number' || publishedYear < 1000 || publishedYear > new Date().getFullYear())
-    ) {
-      return res.status(400).json({ error: 'El año de publicación es inválido' });
-    }
 
     // Verificar si el libro existe
     const bookRef = doc(db, 'books', bookId);
@@ -604,13 +584,7 @@ app.put('/api/update/book/:bookId', isAuthenticated, async (req, res) => {
     }
 
     // Actualizar los datos del libro
-    await updateDoc(bookRef, {
-      ...(title && { title: title.trim() }),
-      ...(author && { author: author.trim() }),
-      ...(genre && { genre: genre.trim() }),
-      ...(publishedYear && { publishedYear }),
-      updatedAt: new Date().toISOString(),
-    });
+    await updateDoc(bookRef, sanitizedData);
 
     console.log('Libro actualizado exitosamente:', bookId);
     return res.status(200).json({ message: 'Libro actualizado exitosamente' });
