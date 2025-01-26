@@ -14,11 +14,11 @@ export const fetchResetPassword = async (email) => {
 
 export const fetchRegisterUser = async (name, email, password, phone) => {
     return fetch(`${environment.HOST}/register`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password, phone }),
-    })
-}
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, email, password, phone }),
+        });
+};
 

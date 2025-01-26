@@ -35,8 +35,8 @@ const TextInput = ({ id, type, isValidCallback, placeholder, index }) => {
     };
 
     useEffect(() => {
-        isValidCallback(index, isValid);
-    }, [isValid]);
+        isValidCallback && isValidCallback(index, isValid);
+    }, [isValid, index, isValidCallback]);
 
     return (
         <div className="inputBox">

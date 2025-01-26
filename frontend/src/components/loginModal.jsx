@@ -69,7 +69,10 @@ const LoginModal =  ({isOpen, onRequestClose }) => {
             <p className="modal-text-description">Inicia sesión para publicar tu Libro a la venta</p>
             <form onSubmit={ handleLogin}>  
               <div className="inputs-container">
-              <TextInput type="email" id="modal-email-login" placeholder="Usuario o correo electrónico"/>
+              <TextInput 
+                type="email" 
+                id="modal-email-login" 
+                placeholder="Usuario o correo electrónico"/>
               <PasswordField id="modal-password-login" placeholder="Contraseña"/>
               </div> 
               <a onClick={openModal} className="modal-link">¿Olvidaste tu contraseña?</a>

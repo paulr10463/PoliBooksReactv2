@@ -2,8 +2,8 @@ import React, {useEffect, useState} from 'react';
 import '../../styles/bookItem.css'
 import UploadImage from './uploadImage.jsx'
 
-const bookItem = ({ title, description, handleCallback  }) => {
-    const [images, setImages] = useState();
+const bookItem = ({ title, description, handleCallback, defaultImages }) => {
+    const [images, setImages] = useState(defaultImages || []);
     const handleImageChanges = (images) => {
         setImages(images);
     };   

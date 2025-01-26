@@ -366,7 +366,7 @@ app.get('/api/search/books', async (req, res) => {
     // Obtener todos los libros de Firebase
     const booksRef = collection(db, 'books');
     const querySnapshot = await getDocs(booksRef);
-
+    
     // Buscar coincidencias sanitizando los títulos en la base de datos
     const matchingBooks = [];
     querySnapshot.forEach((doc) => {
@@ -435,119 +435,62 @@ app.post('/api/register', async (req, res) => {
     const sanitizedBody = sanitizeInput(req.body);
     const { email, password, phone, name } = sanitizedBody;
 
-    // Función mejorada de validación de email
-    function isValidEmail(email) {
-      if (!email || typeof email !== 'string') {
-        return false;
-      }
-      if (email.length > 254) { // RFC 5321
-        return false;
-      }
-      const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-      return emailRegex.test(email);
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Correo electrónico inválido' });
     }
 
-    // Función de validación de teléfono mejorada
-    function isValidPhone(phone) {
-      if (!phone || typeof phone !== 'string') {
-        return false;
-      }
-      // Regex más específica para teléfonos
-      const phoneRegex = /^[+]?[\d]{9,15}$/;
-      return phoneRegex.test(phone);
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
     }
 
-    // Función de validación de nombre
-    function isValidName(name) {
-      if (!name || typeof name !== 'string') {
-        return false;
-      }
-      const trimmedName = name.trim();
-      return trimmedName.length >= 3 && trimmedName.length <= 50;
+    if (!phone || !/^\d{9,15}$/.test(phone)) {
+      return res.status(400).json({ error: 'Número de teléfono inválido. Debe contener entre 10 y 15 dígitos' });
     }
 
-    // Validaciones mejoradas
-    if (!isValidEmail(email)) {
-      return res.status(400).json({ error: 'Formato de correo electrónico inválido' });
+    if (!name || typeof name !== 'string' || name.trim().length < 3) {
+      return res.status(400).json({ error: 'El nombre debe tener al menos 3 caracteres' });
     }
 
-    if (!password || typeof password !== 'string') {
-      return res.status(400).json({ error: 'Formato de contraseña inválido' });
+    // Verificar si el correo ya está en uso
+    const existingUserQuery = query(collection(db, 'users'), where('email', '==', email));
+    const existingUserSnapshot = await getDocs(existingUserQuery);
+
+    if (!existingUserSnapshot.empty) {
+      return res.status(400).json({ error: 'El correo electrónico ya está registrado' });
     }
 
-    if (password.length < 6 || password.length > 128) {
-      return res.status(400).json({ 
-        error: 'La contraseña debe tener entre 6 y 128 caracteres' 
-      });
-    }
-
-    if (!isValidPhone(phone)) {
-      return res.status(400).json({ 
-        error: 'Formato de teléfono inválido' 
-      });
-    }
-
-    if (!isValidName(name)) {
-      return res.status(400).json({ 
-        error: 'El nombre debe tener entre 3 y 50 caracteres' 
-      });
-    }
-
-    // Crear usuario con correo y contraseña
+    // Crear usuario con correo y contraseña en Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
 
-    // Validar UID
-    if (!uid || typeof uid !== 'string' || uid.length < 1) {
-      throw new Error('UID inválido generado');
+    // Validar y sanitizar el UID generado
+    try {
+      validateUID(uid);
+    } catch (validationError) {
+      return res.status(500).json({ error: 'UID generado inválido: ' + validationError.message });
     }
 
-    // Guardar información en Firestore con datos sanitizados
+    // Guardar información adicional en Firestore
     await addDoc(collection(db, 'users'), {
-      uid,
+      uid: uid,
       phone: sanitizeInput(phone),
-      name: sanitizeInput(name.trim()),
-      email: sanitizeInput(email.toLowerCase()),
-      createdAt: new Date().toISOString()
+      name: sanitizeInput(name),
+      email: sanitizeInput(email),
     });
 
-    return res.status(201).json({ 
-      message: 'Registro exitoso',
-      uid 
-    });
-
+    // Respuesta exitosa
+    return res.status(200).json({ message: 'Registro exitoso' });
   } catch (error) {
-    console.error('Error en registro:', error.message);
+    // Manejo de errores específicos de Firebase
+    if (error.code === 'auth/email-already-in-use') {
+      return res.status(400).json({ error: 'El correo electrónico ya está registrado en Firebase' });
+    }
 
-    // Manejo específico de errores
-    const errorResponses = {
-      'auth/email-already-in-use': { 
-        status: 409, 
-        message: 'El correo electrónico ya está registrado' 
-      },
-      'auth/invalid-email': { 
-        status: 400, 
-        message: 'Correo electrónico inválido' 
-      },
-      'auth/operation-not-allowed': { 
-        status: 403, 
-        message: 'Operación no permitida' 
-      },
-      'auth/weak-password': { 
-        status: 400, 
-        message: 'La contraseña es demasiado débil' 
-      }
-    };
-
-    const errorResponse = errorResponses[error.code] || 
-      { status: 500, message: 'Error en el registro' };
-
-    return res.status(errorResponse.status).json({ 
-      error: errorResponse.message 
-    });
+    // Manejo de errores generales
+    console.error('Error al registrarse:', error.message);
+    return res.status(500).json({ error: 'No se pudo completar el registro: ' + error.message });
   }
 });
-
 
 // Ruta para el endpoint de inicio de sesión
 app.post('/api/login', async (req, res) => {
