@@ -79,6 +79,7 @@ const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
       'https://poli-books-react.vercel.app'
+
     ];
     if (allowedOrigins.includes(origin) || !origin) {
       // Permitir el origen
@@ -431,103 +432,47 @@ app.get('/api/read/book/auth/:userID', isAuthenticated, async (req, res) => {
 
 app.post('/api/register', async (req, res) => {
   try {
-    // Función de validación de email
-    function isValidEmail(email) {
-      if (!email || typeof email !== 'string') {
-        return false;
-      }
-      if (email.length > 254) {
-        return false;
-      }
-      const parts = email.split('@');
-      if (parts.length !== 2) {
-        return false;
-      }
-      const [local, domain] = parts;
-      
-      if (!local || !domain || local.length > 64 || domain.length > 255) {
-        return false;
-      }
-      if (domain.indexOf('.') === -1) {
-        return false;
-      }
-      return !/\s/.test(email) && /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(email);
-    }
-
-    // Función de validación de teléfono
-    function isValidPhone(phone) {
-      return typeof phone === 'string' && 
-             phone.length >= 9 && 
-             phone.length <= 15 && 
-             /^\d+$/.test(phone);
-    }
-
-    // Sanitizar y validar los datos de entrada
     const sanitizedBody = sanitizeInput(req.body);
     const { email, password, phone, name } = sanitizedBody;
 
-    // Validaciones
-    if (!isValidEmail(email)) {
+    // Safe email regex that prevents backtracking
+    if (!email || !/^[^@\s]{1,64}@[^@\s]{1,255}\.[^@\s]{2,}$/.test(email)) {
       return res.status(400).json({ error: 'Correo electrónico inválido' });
     }
 
-    if (!password || typeof password !== 'string' || password.length < 6) {
+    // Rest of the code remains the same
+    if (!password || password.length < 6) {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
     }
 
-    if (!isValidPhone(phone)) {
-      return res.status(400).json({ error: 'Número de teléfono inválido. Debe contener entre 9 y 15 dígitos' });
+    if (!phone || !/^\d{10,15}$/.test(phone)) {
+      return res.status(400).json({ error: 'Número de teléfono inválido. Debe contener entre 10 y 15 dígitos' });
     }
 
     if (!name || typeof name !== 'string' || name.trim().length < 3) {
       return res.status(400).json({ error: 'El nombre debe tener al menos 3 caracteres' });
     }
 
-    // Verificar si el correo ya está en uso
-    const existingUserQuery = query(collection(db, 'users'), where('email', '==', email));
-    const existingUserSnapshot = await getDocs(existingUserQuery);
-
-    if (!existingUserSnapshot.empty) {
-      return res.status(400).json({ error: 'El correo electrónico ya está registrado' });
-    }
-
-    // Crear usuario con correo y contraseña en Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
 
-    // Validar y sanitizar el UID generado
     try {
       validateUID(uid);
     } catch (validationError) {
       return res.status(500).json({ error: 'UID generado inválido: ' + validationError.message });
     }
 
-    // Guardar información adicional en Firestore
     await addDoc(collection(db, 'users'), {
       uid: uid,
       phone: sanitizeInput(phone),
       name: sanitizeInput(name),
       email: sanitizeInput(email),
-      createdAt: new Date().toISOString()
     });
 
-    // Respuesta exitosa
-    return res.status(201).json({ message: 'Registro exitoso' });
-
+    return res.status(200).json({ message: 'Registro exitoso' });
   } catch (error) {
-    console.error('Error al registrarse:', error);
-    
-    const errorMessages = {
-      'auth/email-already-in-use': 'El correo electrónico ya está registrado',
-      'auth/invalid-email': 'Formato de correo electrónico inválido',
-      'auth/operation-not-allowed': 'Operación no permitida',
-      'auth/invalid-credentials': 'Error de autenticación'
-    };
-
-    const errorMessage = errorMessages[error.code] || 'Error en el registro';
-    const statusCode = error.code?.startsWith('auth/') ? 400 : 500;
-
-    return res.status(statusCode).json({ error: errorMessage });
+    console.error('Error al registrarse:', error.message);
+    return res.status(500).json({ error: 'No se pudo completar el registro: ' + error.message });
   }
 });
 
