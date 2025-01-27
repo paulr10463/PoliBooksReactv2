@@ -43,7 +43,7 @@ const TextInput = ({ id, type, isValidCallback, placeholder, index }) => {
             <input
                 required
                 id={id}
-                type="text"
+                type={type} /* Aquí usamos el valor dinámico de `type` */
                 onChange={handleInputChange}
                 value={value}
                 className={isValid ? "is-valid" : "is-invalid"}

@@ -26,21 +26,25 @@ const RegisterUserBox = () => {
 
     // Handle focus and blur events for password field details
     useEffect(() => {
-        const passwordInput = document.getElementById("user-form-password");
-        const showPasswordDetails = () => {
-            document.querySelector(".password-details").style.display = "block";
-        };
-        const hidePasswordDetails = () => {
-            document.querySelector(".password-details").style.display = "none";
-        };
-
-        passwordInput.addEventListener("focus", showPasswordDetails);
-        passwordInput.addEventListener("blur", hidePasswordDetails);
-
+        const securityInput = document.getElementById('user-form-password');
+        securityInput.addEventListener('focus', function () {
+            const securityDetails = document.querySelector('.password-details');
+            securityDetails.style.display = 'block';
+        });
+        securityInput.addEventListener('blur', function () {
+            const securityDetails = document.querySelector('.password-details');
+            securityDetails.style.display = 'none';
+        });
         return () => {
-            passwordInput.removeEventListener("focus", showPasswordDetails);
-            passwordInput.removeEventListener("blur", hidePasswordDetails);
-        };
+            securityInput.removeEventListener('focus', function () {
+                const securityDetails = document.querySelector('.password-details');
+                securityDetails.style.display = 'block';
+            });
+            securityInput.removeEventListener('blur', function () {
+                const securityDetails = document.querySelector('.password-details');
+                securityDetails.style.display = 'none';
+            });
+        }
     }, []);
 
     const handleRegister = () => {
