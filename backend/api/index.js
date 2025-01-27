@@ -431,20 +431,52 @@ app.get('/api/read/book/auth/:userID', isAuthenticated, async (req, res) => {
 
 app.post('/api/register', async (req, res) => {
   try {
+    // Función de validación de email
+    function isValidEmail(email) {
+      if (!email || typeof email !== 'string') {
+        return false;
+      }
+      if (email.length > 254) {
+        return false;
+      }
+      const parts = email.split('@');
+      if (parts.length !== 2) {
+        return false;
+      }
+      const [local, domain] = parts;
+      
+      if (!local || !domain || local.length > 64 || domain.length > 255) {
+        return false;
+      }
+      if (domain.indexOf('.') === -1) {
+        return false;
+      }
+      return !/\s/.test(email) && /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(email);
+    }
+
+    // Función de validación de teléfono
+    function isValidPhone(phone) {
+      return typeof phone === 'string' && 
+             phone.length >= 9 && 
+             phone.length <= 15 && 
+             /^\d+$/.test(phone);
+    }
+
     // Sanitizar y validar los datos de entrada
     const sanitizedBody = sanitizeInput(req.body);
     const { email, password, phone, name } = sanitizedBody;
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    // Validaciones
+    if (!isValidEmail(email)) {
       return res.status(400).json({ error: 'Correo electrónico inválido' });
     }
 
-    if (!password || password.length < 6) {
+    if (!password || typeof password !== 'string' || password.length < 6) {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
     }
 
-    if (!phone || !/^\d{9,15}$/.test(phone)) {
-      return res.status(400).json({ error: 'Número de teléfono inválido. Debe contener entre 10 y 15 dígitos' });
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ error: 'Número de teléfono inválido. Debe contener entre 9 y 15 dígitos' });
     }
 
     if (!name || typeof name !== 'string' || name.trim().length < 3) {
@@ -476,19 +508,26 @@ app.post('/api/register', async (req, res) => {
       phone: sanitizeInput(phone),
       name: sanitizeInput(name),
       email: sanitizeInput(email),
+      createdAt: new Date().toISOString()
     });
 
     // Respuesta exitosa
-    return res.status(200).json({ message: 'Registro exitoso' });
-  } catch (error) {
-    // Manejo de errores específicos de Firebase
-    if (error.code === 'auth/email-already-in-use') {
-      return res.status(400).json({ error: 'El correo electrónico ya está registrado en Firebase' });
-    }
+    return res.status(201).json({ message: 'Registro exitoso' });
 
-    // Manejo de errores generales
-    console.error('Error al registrarse:', error.message);
-    return res.status(500).json({ error: 'No se pudo completar el registro: ' + error.message });
+  } catch (error) {
+    console.error('Error al registrarse:', error);
+    
+    const errorMessages = {
+      'auth/email-already-in-use': 'El correo electrónico ya está registrado',
+      'auth/invalid-email': 'Formato de correo electrónico inválido',
+      'auth/operation-not-allowed': 'Operación no permitida',
+      'auth/invalid-credentials': 'Error de autenticación'
+    };
+
+    const errorMessage = errorMessages[error.code] || 'Error en el registro';
+    const statusCode = error.code?.startsWith('auth/') ? 400 : 500;
+
+    return res.status(statusCode).json({ error: errorMessage });
   }
 });
 
