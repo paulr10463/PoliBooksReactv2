@@ -77,7 +77,7 @@ app.use((err, req, res, next) => {
 
 // Manejo de Archivos ocultos accesibles públicamente
 app.use((req, res, next) => {
-  const blockedPaths = ['/hg', '/.git'];
+  const blockedPaths = ['/.hg', '/.bzr', '/_darcs', '/BitKeeper'];
   if (blockedPaths.includes(req.path)) {
     return res.status(403).send('Acceso denegado.');
   }
