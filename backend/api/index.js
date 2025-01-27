@@ -14,6 +14,7 @@ const multer = require('multer');
 const { getStorage, ref, uploadBytesResumable, getDownloadURL } = require("firebase/storage");
 const { isAuthenticated, encryptToken, removeRefreshToken } = require('../firebaseAuthentication');
 const firebaseConfig = require('../firebaseConfig');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const { sanitizeInput, validateUID } = require('../utils/sanitizeUtils');
@@ -45,9 +46,17 @@ const upload = multer({
   }
 });
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 500, // Máximo 100 solicitudes por IP
+  message: 'Demasiadas solicitudes desde esta IP, inténtalo más tarde.',
+});
 
 // Creación de una instancia en Express
 const app = express();
+
+//Prevencion anti ataques DDOS
+app.use(limiter);
 
 // Configuración básica de seguridad
 app.use(express.json({ limit: '2mb' })); // Limitar tamaño de payload
@@ -88,7 +97,6 @@ const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
       'https://poli-books-react.vercel.app'
-
     ];
     if (allowedOrigins.includes(origin) || !origin) {
       // Permitir el origen
