@@ -184,7 +184,8 @@ app.use(logRequests);
 // Ruta básica de prueba
 app.get('/api', (req, res) => {
   const path = `/api/item/${require('uuid').v4()}`;
-  res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
+  // Configuración de Cache-Control más segura
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private'); 
   res.send(`Hello! Go to item: <a href="${path}">${path}</a>`);
 });
 
