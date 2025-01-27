@@ -6,7 +6,6 @@ import { useBooks } from "../hooks/useBooks.jsx";
 import LoadSpinner from "./shared/loadSpinnerComponent/loadSpinnerComponent.jsx";
 
 export default function Books() {
-
     const { books, isLoading, error } = useBooks(12);
     return (
         // Renderización del componente
